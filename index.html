@@ -239,6 +239,10 @@
                     <input type="number" id="power" value="1250" oninput="generateJson()">
                 </div>
                 <div class="form-group">
+                    <label for="speed">速度 (speed)</label>
+                    <input type="number" id="speed" value="150" oninput="generateJson()">
+                </div>
+                <div class="form-group">
                     <label for="mode">攻击方式 (mode)</label>
                     <select id="mode" onchange="generateJson()">
                         <option value="21">21 (随机一个敌人)</option>
@@ -299,7 +303,7 @@
                 </div>
                 <div class="form-group">
                     <label for="preSkill">前置武学 (preSkill)</label>
-                    <input type="text" id="preSkill" placeholder="逗号分隔，例如：1001,1002" oninput="generateJson()">
+                    <input type="text" id="preSkill" placeholder="若无则空" oninput="generateJson()">
                 </div>
             </div>
 
@@ -322,12 +326,12 @@
                     <input type="text" id="effDesp2" placeholder="求生欲望高涨，提升18速度" oninput="generateJson()">
                 </div>
                 <div class="form-group">
-                    <label for="effName4">效果4名称</label>
-                    <input type="text" id="effName4" placeholder="五子神人" oninput="generateJson()">
+                    <label for="effName3">效果3名称</label>
+                    <input type="text" id="effName3" placeholder="五子神人" oninput="generateJson()">
                 </div>
                 <div class="form-group">
-                    <label for="effDesp4">效果4描述</label>
-                    <input type="text" id="effDesp4" placeholder="五子神人出手必定伤害两人，自己与观众" oninput="generateJson()">
+                    <label for="effDesp3">效果3描述</label>
+                    <input type="text" id="effDesp3" placeholder="五子神人出手必定伤害两人，自己与观众" oninput="generateJson()">
                 </div>
             </div>
 
@@ -606,6 +610,7 @@
             const id = document.getElementById('id').value;
             const type = document.querySelector('input[name="type"]:checked') ? document.querySelector('input[name="type"]:checked').value : '2';
             const power = document.getElementById('power').value;
+            const speed = document.getElementById('speed').value;
             const mode = document.getElementById('mode').value;
             const sb_gd = document.getElementById('sb_gd').value;
             const baoji = document.getElementById('baoji').value;
@@ -622,7 +627,7 @@
             let data = {
                 "type": parseInt(type),
                 "power": parseInt(power),
-                "speed": 150,
+                "speed": parseInt(speed),
                 "mode": parseInt(mode),
                 "sb_gd": parseInt(sb_gd),
             };
@@ -718,11 +723,11 @@
                 data.effName2 = effName2;
                 data.effDesp2 = effDesp2;
             }
-            const effName4 = document.getElementById('effName4').value;
-            const effDesp4 = document.getElementById('effDesp4').value;
-            if (effName4 || effDesp4) {
-                data.effName4 = effName4;
-                data.effDesp4 = effDesp4;
+            const effName3 = document.getElementById('effName3').value;
+            const effDesp3 = document.getElementById('effDesp3').value;
+            if (effName3 || effDesp3) {
+                data.effName3 = effName3;
+                data.effDesp3 = effDesp3;
             }
 
             // 添加其他基础信息
@@ -736,10 +741,10 @@
                 [id]: 1
             };
             
-            const output = {};
-            output[id] = data;
-
-            document.getElementById('jsonOutput').textContent = JSON.stringify(output, null, 2);
+            // 将内部对象转化为 JSON 字符串，并手动拼接最外层键和逗号
+            const innerJson = JSON.stringify(data, null, 2);
+            const finalOutput = `"${id}": ${innerJson},`;
+            document.getElementById('jsonOutput').textContent = finalOutput;
         }
 
         // 一键复制功能
