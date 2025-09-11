@@ -326,12 +326,20 @@
                     <input type="text" id="effDesp2" placeholder="求生欲望高涨，提升18速度" oninput="generateJson()">
                 </div>
                 <div class="form-group">
-                    <label for="effName3">效果3名称</label>
+                    <label for="effName3">效果3名称 <span class="tooltip">(应用于额外攻击模式)<span class="tooltiptext">此效果通常用于描述“额外攻击方式 (adMode)”</span></span></label>
                     <input type="text" id="effName3" placeholder="五字神人" oninput="generateJson()">
                 </div>
                 <div class="form-group">
                     <label for="effDesp3">效果3描述</label>
                     <input type="text" id="effDesp3" placeholder="五字神人出手必定伤害两人，自己与观众" oninput="generateJson()">
+                </div>
+                <div class="form-group">
+                    <label for="effName4">效果4名称 <span class="tooltip">(应用于增加伤害)<span class="tooltiptext">此效果通常用于描述"增加伤害"相关词条</span></span></label>
+                    <input type="text" id="effName4" placeholder="soyo惊世一跪" oninput="generateJson()">
+                </div>
+                <div class="form-group">
+                    <label for="effDesp4">效果4描述</label>
+                    <input type="text" id="effDesp4" placeholder="还有更惊世的saki酱saki酱saki酱saki酱saki酱" oninput="generateJson()">
                 </div>
             </div>
 
@@ -729,6 +737,13 @@
                 data.effName3 = effName3;
                 data.effDesp3 = effDesp3;
             }
+            // 添加新的效果描述4
+            const effName4 = document.getElementById('effName4').value;
+            const effDesp4 = document.getElementById('effDesp4').value;
+            if (effName4 || effDesp4) {
+                data.effName4 = effName4;
+                data.effDesp4 = effDesp4;
+            }
 
             // 添加其他基础信息
             data.id = parseInt(id);
@@ -763,5 +778,4 @@
     </script>
 
 </body>
-
 </html>
