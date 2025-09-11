@@ -350,6 +350,43 @@
                 <label for="nick">装备名称 (nick)</label>
                 <input type="text" id="nick" placeholder="请输入装备名称" oninput="updateJson()" autocomplete="off">
             </div>
+            
+            <div class="form-group">
+                <label>品质颜色 (desp prefix)</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <select id="qualityPreset" onchange="toggleCustomSection()" autocomplete="off">
+                        <option value="" disabled selected>选择预设或自定义...</option>
+                        <option value="|ff8d30|无双|">无双</option>
+                        <option value="|E500F1|罕见|">罕见</option>
+                        <option value="|5ED1FF|精致|">精致</option>
+                        <option value="|919191|普通|">普通</option>
+                        <option value="|1AFF00|少林|">少林</option>
+                        <option value="|1AFF00|武当|">武当</option>
+                        <option value="|1AFF00|太乙|">太乙</option>
+                        <option value="|1AFF00|泰山|">泰山</option>
+                        <option value="|1AFF00|峨眉|">峨眉</option>
+                        <option value="|1AFF00|嵩山|">嵩山</option>
+                        <option value="|1AFF00|华山|">华山</option>
+                        <option value="|1AFF00|圣教|">圣教</option>
+                        <option value="|ff8d30|吞噬|">吞噬</option>
+                        <option value="|ff8d30|嗜血|">嗜血</option>
+                        <option value="|ff8d30|复苏|">复苏</option>
+                        <option value="|ff8d30|沉寂|">沉寂</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="customQualitySection" style="display: none; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label for="customQualityColor">自定义品质颜色</label>
+                    <input type="color" id="customQualityColor" value="#ff8d30" oninput="updateCustomDisplay()">
+                </div>
+                <div class="form-group">
+                    <label for="customQualityName">自定义品质名称</label>
+                    <input type="text" id="customQualityName" placeholder="请输入品质名称" oninput="updateCustomDisplay()">
+                </div>
+            </div>
 
             <div class="form-group">
                 <label for="desp">装备描述 (desp)</label>
@@ -407,6 +444,31 @@
         '134217728': '暴击 (134217728)'
     };
 
+    function toggleCustomSection() {
+        const qualityPreset = document.getElementById('qualityPreset');
+        const customSection = document.getElementById('customQualitySection');
+        
+        if (qualityPreset.value === 'custom') {
+            customSection.style.display = 'block';
+        } else {
+            customSection.style.display = 'none';
+        }
+        updateJson();
+    }
+
+    function updateCustomDisplay() {
+        const customOption = document.querySelector('#qualityPreset option[value="custom"]');
+        const customQualityName = document.getElementById('customQualityName').value;
+        
+        if (customQualityName) {
+            customOption.textContent = customQualityName;
+        } else {
+            customOption.textContent = '自定义';
+        }
+        
+        updateJson();
+    }
+
     function updateJson() {
         const itemId = document.getElementById('itemId').value || '装备ID';
         const e1Type = document.getElementById('e1Type').value;
@@ -417,7 +479,22 @@
         const noQh = document.querySelector('input[name="noQh"]:checked').value;
         const icon = document.getElementById('icon').value || '图标ID';
         const nick = document.getElementById('nick').value || '装备名称';
+        const selectedQuality = document.getElementById('qualityPreset').value;
+
+        let qualityPrefix = '';
+        if (selectedQuality === 'custom') {
+            const customQualityColor = document.getElementById('customQualityColor').value.slice(1);
+            const customQualityName = document.getElementById('customQualityName').value;
+            if (customQualityColor && customQualityName) {
+                qualityPrefix = `【|${customQualityColor}|${customQualityName}|】`;
+            }
+        } else if (selectedQuality) {
+            qualityPrefix = `【${selectedQuality}】`;
+        }
+        
         const desp = document.getElementById('desp').value || '装备描述';
+        const combinedDesp = qualityPrefix + desp;
+
         const type = document.getElementById('type').value;
         const money = document.getElementById('money').value || '装备售价';
 
@@ -440,7 +517,7 @@
             id: itemId ? parseInt(itemId) : 0,
             icon: icon ? parseInt(icon) : 0,
             nick: nick,
-            desp: desp,
+            desp: combinedDesp,
             type: type ? parseInt(type) : 0,
             kungfu: 0,
             money: money ? parseInt(money) : 0
@@ -503,5 +580,4 @@
 </script>
 
 </body>
-
 </html>
