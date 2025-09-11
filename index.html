@@ -549,8 +549,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const sections = [
                 { checkbox: 'addBuff', group: 'buffGroup' },
-                { checkbox: 'addLevelEffect', group: 'levelEffectGroup' },
                 { checkbox: 'addAdMode', group: 'adModeGroup' },
+                { checkbox: 'addLevelEffect', group: 'levelEffectGroup' },
                 { checkbox: 'addGoodEquip', group: 'goodEquipGroup' }
             ];
 
@@ -665,7 +665,7 @@
                 data.buffLevel = parseInt(buffLevel);
             }
 
-            // 添加可选的属性加成模块
+            // 添加属性加成
             if (document.getElementById('addLevelEffect').checked) {
                 const rate = document.getElementById('levelEffectRate').value;
                 const param = document.getElementById('levelEffectParam').value;
@@ -687,8 +687,8 @@
                 };
                 data.levelEffectLev = parseInt(levelEffectLev);
             }
-            
-            // 添加可选的额外攻击方式模块
+
+            // 添加额外攻击方式
             if (document.getElementById('addAdMode').checked) {
                 const adMode = document.getElementById('adMode').value;
                 const adModePercent = document.getElementById('adModePercent').value;
@@ -702,7 +702,7 @@
 
             data.baoji = parseFloat(baoji);
             data.baojiEffect = parseFloat(baojiEffect);
-
+            
             // 添加可选的适配武器增幅模块
             if (document.getElementById('addGoodEquip').checked) {
                 const goodEquip = document.getElementById('goodEquip').value;
