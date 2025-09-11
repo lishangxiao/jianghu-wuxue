@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>装备配置生成器</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --text-color: #333;
+            --input-bg: #fafafa;
+            --input-border: #e0e0e0;
+            --accent-color: #3498db;
+            --hover-color: #2980b9;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --spacing-unit: 20px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: var(--spacing-unit);
+            padding-bottom: 250px; /* 为手机端固定底部面板预留空间 */
+        }
+
+        .main-container {
+            display: flex;
+            gap: var(--spacing-unit);
+            width: 100%;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .left-panel, .right-panel-desktop {
+            background-color: var(--container-bg);
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 1.5);
+            box-sizing: border-box;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .right-panel-desktop {
+            flex: 1;
+            min-width: 350px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--spacing-unit);
+            height: fit-content;
+            align-self: flex-start;
+        }
+        
+        /* 手机端面板默认隐藏 */
+        .right-panel-mobile {
+            display: none;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+            padding: var(--spacing-unit);
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .radio-group label, .checkbox-group label {
+            display: inline-block;
+            margin-right: 20px;
+            font-weight: normal;
+        }
+
+        .radio-group input, .checkbox-group input {
+            margin-right: 5px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .trait-container {
+            border: 1px solid var(--input-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-unit);
+            background-color: rgba(0, 0, 0, 0.03);
+            margin-top: 1rem;
+        }
+
+        .trait-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+            color: white;
+            font-size: 16px;
+        }
+
+        .add-button {
+            background-color: var(--accent-color);
+        }
+        
+        .add-button:hover {
+            background-color: var(--hover-color);
+        }
+
+        .remove-button {
+            background-color: #dc3545;
+            padding: 0.5rem 0.75rem;
+            white-space: nowrap;
+        }
+
+        .remove-button:hover {
+            background-color: #c82333;
+        }
+
+        #output, #output-mobile {
+            width: 100%;
+            flex-grow: 1;
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+
+        #copyBtn, #copyBtn-mobile {
+            padding: 12px 25px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        #copyBtn:hover, #copyBtn-mobile:hover {
+            background-color: var(--hover-color);
+        }
+        
+        /* 手机端布局 */
+        @media (max-width: 768px) {
+            .main-container {
+                display: block; /* 移除 flexbox 布局 */
+            }
+
+            .left-panel {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .right-panel-desktop {
+                display: none; /* 手机端隐藏桌面面板 */
+            }
+            
+            .right-panel-mobile {
+                display: block; /* 手机端显示手机面板 */
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 250px;
+                border-radius: 0;
+                box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+                border-top-left-radius: var(--border-radius);
+                border-top-right-radius: var(--border-radius);
+                padding: var(--spacing-unit);
+                background-color: var(--container-bg);
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .right-panel-mobile h2 {
+                display: none;
+            }
+
+            .right-panel-mobile #output-mobile {
+                font-size: 12px;
+                max-height: calc(100% - 60px);
+            }
+
+            .right-panel-mobile #copyBtn-mobile {
+                margin-top: var(--spacing-unit);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="left-panel">
+        <h2>装备配置</h2>
+        <div class="form-section">
+            <div class="form-group">
+                <label for="itemId">装备ID (顶级键名)</label>
+                <input type="text" id="itemId" placeholder="请输入装备ID，例如 6003" oninput="updateJson()" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label>主属性 (e1)</label>
+                <div class="form-group">
+                    <label for="e1Type">类型 (t)</label>
+                    <select id="e1Type" onchange="updateJson()" autocomplete="off">
+                        <option value="" disabled selected>选择属性类型...</option>
+                        <option value="1">绝对血量 (1)</option>
+                        <option value="2">血量 (2)</option>
+                        <option value="4">速度 (4)</option>
+                        <option value="16">闪避 (16)</option>
+                        <option value="64">格挡 (64)</option>
+                        <option value="65536">绝对攻击 (65536)</option>
+                        <option value="131072">攻击 (131072)</option>
+                        <option value="524288">免伤 (524288)</option>
+                        <option value="2097152">吸血 (2097152)</option>
+                        <option value="8388608">回血 (8388608)</option>
+                        <option value="16777216">爆伤 (16777216)</option>
+                        <option value="33554432">反伤 (33554432)</option>
+                        <option value="134217728">暴击 (134217728)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="e1Value">数值 (v)</label>
+                    <input type="number" id="e1Value" placeholder="请输入属性值" oninput="updateJson()" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>副属性 (e2)</label>
+                <div class="form-group">
+                    <label for="e2Type">类型 (t)</label>
+                    <select id="e2Type" onchange="updateJson()" autocomplete="off">
+                        <option value="" disabled selected>选择属性类型...</option>
+                        <option value="1">绝对血量 (1)</option>
+                        <option value="2">血量 (2)</option>
+                        <option value="4">速度 (4)</option>
+                        <option value="16">闪避 (16)</option>
+                        <option value="64">格挡 (64)</option>
+                        <option value="65536">绝对攻击 (65536)</option>
+                        <option value="131072">攻击 (131072)</option>
+                        <option value="524288">免伤 (524288)</option>
+                        <option value="2097152">吸血 (2097152)</option>
+                        <option value="8388608">回血 (8388608)</option>
+                        <option value="16777216">爆伤 (16777216)</option>
+                        <option value="33554432">反伤 (33554432)</option>
+                        <option value="134217728">暴击 (134217728)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="e2Value">数值 (v)</label>
+                    <input type="number" id="e2Value" placeholder="请输入属性值" oninput="updateJson()" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="star">品级 (star)</label>
+                <select id="star" onchange="updateJson()" autocomplete="off">
+                    <option value="" disabled selected>选择品级...</option>
+                    <option value="0">? (0)</option>
+                    <option value="1">E (1)</option>
+                    <option value="2">D (2)</option>
+                    <option value="3">C (3)</option>
+                    <option value="4">B (4)</option>
+                    <option value="5">A (5)</option>
+                    <option value="6">S (6)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>是否可以强化 (noQh)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="noQh" value="0" checked onchange="updateJson()" autocomplete="off"> 可以强化</label>
+                    <label><input type="radio" name="noQh" value="1" onchange="updateJson()" autocomplete="off"> 不能强化</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>可铸造特性 (tx)</label>
+                <div id="traits" class="trait-container">
+                    </div>
+                <button class="add-button" onclick="addTrait()">添加特性</button>
+            </div>
+
+            <div class="form-group">
+                <label for="icon">图标ID (icon)</label>
+                <input type="number" id="icon" placeholder="请输入图标ID" oninput="updateJson()" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="nick">装备名称 (nick)</label>
+                <input type="text" id="nick" placeholder="请输入装备名称" oninput="updateJson()" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="desp">装备描述 (desp)</label>
+                <input type="text" id="desp" placeholder="请输入装备描述" oninput="updateJson()" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="type">装备类型 (type)</label>
+                <select id="type" onchange="updateJson()" autocomplete="off">
+                    <option value="" disabled selected>选择装备类型...</option>
+                    <option value="1">拳 (1)</option>
+                    <option value="2">剑 (2)</option>
+                    <option value="3">刀 (3)</option>
+                    <option value="4">棍 (4)</option>
+                    <option value="5">衣服 (5)</option>
+                    <option value="6">戒指 (6)</option>
+                    <option value="7">护腕 (7)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="money">装备售价 (money)</label>
+                <input type="number" id="money" placeholder="请输入装备售价" oninput="updateJson()" autocomplete="off">
+            </div>
+        </div>
+    </div>
+    
+    <div class="right-panel-desktop">
+        <h2>JSON输出</h2>
+        <pre id="output"></pre>
+        <button id="copyBtn" onclick="copyJson()">一键复制</button>
+    </div>
+</div>
+
+<div class="right-panel-mobile">
+    <pre id="output-mobile"></pre>
+    <button id="copyBtn-mobile" onclick="copyJsonMobile()">一键复制</button>
+</div>
+
+<script>
+    // 允许在特定元素上滚动
+    document.getElementById('output').addEventListener('touchmove', function(e) { e._isScroller = true; });
+    
+    const outputMobile = document.getElementById('output-mobile');
+    if (outputMobile) {
+        outputMobile.addEventListener('touchmove', function(e) {
+            e._isScroller = true;
+        });
+    }
+
+    document.body.addEventListener('touchmove', function(e) {
+        if (e._isScroller) return;
+        e.preventDefault();
+    }, { passive: false });
+
+    const traitTypeOptions = {
+        '': '选择属性类型...',
+        '1': '绝对血量 (1)',
+        '2': '血量 (2)',
+        '4': '速度 (4)',
+        '16': '闪避 (16)',
+        '64': '格挡 (64)',
+        '65536': '绝对攻击 (65536)',
+        '131072': '攻击 (131072)',
+        '524288': '免伤 (524288)',
+        '2097152': '吸血 (2097152)',
+        '8388608': '回血 (8388608)',
+        '16777216': '爆伤 (16777216)',
+        '33554432': '反伤 (33554432)',
+        '134217728': '暴击 (134217728)'
+    };
+
+    function updateJson() {
+        const itemId = document.getElementById('itemId').value || '装备ID';
+        const e1Type = document.getElementById('e1Type').value;
+        const e1Value = document.getElementById('e1Value').value;
+        const e2Type = document.getElementById('e2Type').value;
+        const e2Value = document.getElementById('e2Value').value;
+        const star = document.getElementById('star').value;
+        const noQh = document.querySelector('input[name="noQh"]:checked').value;
+        const icon = document.getElementById('icon').value || '图标ID';
+        const nick = document.getElementById('nick').value || '装备名称';
+        const desp = document.getElementById('desp').value || '装备描述';
+        const type = document.getElementById('type').value;
+        const money = document.getElementById('money').value || '装备售价';
+
+        const traits = [];
+        const traitItems = document.querySelectorAll('#traits .trait-item');
+        traitItems.forEach(item => {
+            const t = item.querySelector('.trait-type').value;
+            const v = item.querySelector('.trait-value').value;
+            if (t && v) {
+                traits.push({ t: parseInt(t), v: parseInt(v), r: 0 });
+            }
+        });
+
+        const data = {
+            e1: { t: e1Type ? parseInt(e1Type) : 0, v: e1Value ? parseInt(e1Value) : 0, r: 0 },
+            e2: { t: e2Type ? parseInt(e2Type) : 0, v: e2Value ? parseInt(e2Value) : 0, r: 0 },
+            star: star ? parseInt(star) : 0,
+            noQh: parseInt(noQh),
+            tx: traits,
+            id: itemId ? parseInt(itemId) : 0,
+            icon: icon ? parseInt(icon) : 0,
+            nick: nick,
+            desp: desp,
+            type: type ? parseInt(type) : 0,
+            kungfu: 0,
+            money: money ? parseInt(money) : 0
+        };
+
+        const jsonString = JSON.stringify(data, null, 4);
+        const outputText = `"${itemId}": ${jsonString},`;
+
+        document.getElementById('output').textContent = outputText;
+        if (outputMobile) {
+            outputMobile.textContent = outputText;
+        }
+    }
+
+    function addTrait() {
+        const traitsContainer = document.getElementById('traits');
+        const traitDiv = document.createElement('div');
+        traitDiv.className = 'trait-item';
+        
+        let optionsHtml = '';
+        for (const [key, value] of Object.entries(traitTypeOptions)) {
+            optionsHtml += `<option value="${key}">${value}</option>`;
+        }
+
+        traitDiv.innerHTML = `
+            <select class="trait-type" onchange="updateJson()" autocomplete="off">
+                ${optionsHtml}
+            </select>
+            <input type="number" class="trait-value" placeholder="数值" oninput="updateJson()" autocomplete="off">
+            <input type="number" class="trait-r" value="0" readonly>
+            <button class="remove-button" onclick="removeTrait(this)">删除</button>
+        `;
+        traitsContainer.appendChild(traitDiv);
+        updateJson();
+    }
+
+    function removeTrait(button) {
+        button.closest('.trait-item').remove();
+        updateJson();
+    }
+
+    async function copyJson() {
+        const outputText = document.getElementById('output').textContent;
+        try {
+            const textToCopy = outputText.endsWith(',') ? outputText.slice(0, -1) : outputText;
+            await navigator.clipboard.writeText(textToCopy);
+            const copyBtn = document.getElementById('copyBtn');
+            copyBtn.textContent = '已复制!';
+            setTimeout(() => {
+                copyBtn.textContent = '一键复制';
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            alert('复制失败，请手动复制。');
+        }
+    }
+
+    async function copyJsonMobile() {
+        const outputText = document.getElementById('output-mobile').textContent;
+        try {
+            const textToCopy = outputText.endsWith(',') ? outputText.slice(0, -1) : outputText;
+            await navigator.clipboard.writeText(textToCopy);
+            const copyBtn = document.getElementById('copyBtn-mobile');
+            copyBtn.textContent = '已复制!';
+            setTimeout(() => {
+                copyBtn.textContent = '一键复制';
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            alert('复制失败，请手动复制。');
+        }
+    }
+
+    window.onload = () => {
+        updateJson();
+    };
+</script>
+
+</body>
+</html>
