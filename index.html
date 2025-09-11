@@ -262,14 +262,6 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="baoji">暴击几率 (baoji)</label>
-                    <input type="number" id="baoji" value="5" oninput="generateJson()">
-                </div>
-                <div class="form-group">
-                    <label for="baojiEffect">爆伤数值 (baojiEffect)</label>
-                    <input type="number" id="baojiEffect" step="0.1" value="2.5" oninput="generateJson()">
-                </div>
-                <div class="form-group">
                     <label for="yueLi">阅历比例 (yueLi)</label>
                     <input type="number" id="yueLi" step="0.1" value="96.0" oninput="generateJson()">
                 </div>
@@ -284,6 +276,14 @@
                         <option value="5">5 (A)</option>
                         <option value="6" selected>6 (S)</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="baoji">暴击几率 (baoji)</label>
+                    <input type="number" id="baoji" step="0.1" value="5.0" oninput="generateJson()">
+                </div>
+                <div class="form-group">
+                    <label for="baojiEffect">爆伤数值 (baojiEffect)</label>
+                    <input type="number" id="baojiEffect" step="0.1" value="2.0" oninput="generateJson()">
                 </div>
             </div>
 
@@ -306,7 +306,7 @@
                     <input type="text" id="preSkill" placeholder="若无则空" oninput="generateJson()">
                 </div>
             </div>
-
+            
             <div class="form-section">
                 <h3>效果描述 (effName/effDesp)</h3>
                 <div class="form-group">
@@ -546,39 +546,39 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        function toggleSection() {
             const sections = [
                 { checkbox: 'addBuff', group: 'buffGroup' },
-                { checkbox: 'addAdMode', group: 'adModeGroup' },
                 { checkbox: 'addLevelEffect', group: 'levelEffectGroup' },
+                { checkbox: 'addAdMode', group: 'adModeGroup' },
                 { checkbox: 'addGoodEquip', group: 'goodEquipGroup' }
             ];
-
-            // 初始隐藏所有可选模块
             sections.forEach(s => {
-                document.getElementById(s.group).style.display = 'none';
+                const checkbox = document.getElementById(s.checkbox);
+                const group = document.getElementById(s.group);
+                if (checkbox && group) {
+                    group.style.display = checkbox.checked ? 'block' : 'none';
+                }
             });
+            generateJson();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleSection();
             
-            // 绑定所有输入和选择事件，确保实时更新
             const allInputs = document.querySelectorAll('input, select, textarea');
             allInputs.forEach(element => {
                 element.addEventListener('input', generateJson);
                 element.addEventListener('change', generateJson);
             });
 
-            // 监听复选框的 change 事件，动态显示/隐藏配置组
-            sections.forEach(s => {
-                document.getElementById(s.checkbox).addEventListener('change', () => {
-                    const isChecked = document.getElementById(s.checkbox).checked;
-                    document.getElementById(s.group).style.display = isChecked ? 'block' : 'none';
-                    generateJson();
-                });
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', toggleSection);
             });
 
-            // 初始化JSON
             generateJson();
 
-            // 阻止 JSON 输出框的滚动穿透
             const jsonOutput = document.getElementById('jsonOutput');
             let startY;
             jsonOutput.addEventListener('touchstart', (e) => {
@@ -591,7 +591,6 @@
                 const clientHeight = jsonOutput.clientHeight;
                 const scrollTop = jsonOutput.scrollTop;
 
-                // 如果已经滚动到顶部并且继续向下拉，或者已经滚动到底部并且继续向上推
                 if (
                     (deltaY > 0 && scrollTop === 0) ||
                     (deltaY < 0 && (scrollTop + clientHeight >= scrollHeight))
@@ -601,7 +600,6 @@
             });
         });
 
-        // 同步 Buff 种类选择框和输入框
         function syncEffectFlag() {
             const select = document.getElementById('eEffectFlagSelect');
             const input = document.getElementById('eEffectFlagInput');
@@ -613,38 +611,46 @@
             generateJson();
         }
 
-        // 生成 JSON 内容
         function generateJson() {
+            // 获取所有表单值
             const id = document.getElementById('id').value;
-            const type = document.querySelector('input[name="type"]:checked') ? document.querySelector('input[name="type"]:checked').value : '2';
+            const type = document.querySelector('input[name="type"]:checked')?.value || '2';
             const power = document.getElementById('power').value;
             const speed = document.getElementById('speed').value;
             const mode = document.getElementById('mode').value;
             const sb_gd = document.getElementById('sb_gd').value;
-            const baoji = document.getElementById('baoji').value;
-            const baojiEffect = document.getElementById('baojiEffect').value;
             const yueLi = document.getElementById('yueLi').value;
             const star = document.getElementById('star').value;
             const nick = document.getElementById('nick').value;
             const desp = document.getElementById('desp').value;
             const icon = document.getElementById('icon').value;
             const preSkillInput = document.getElementById('preSkill').value;
+            const baoji = document.getElementById('baoji').value;
+            const baojiEffect = document.getElementById('baojiEffect').value;
             
+            const effName1 = document.getElementById('effName1').value;
+            const effDesp1 = document.getElementById('effDesp1').value;
+            const effName2 = document.getElementById('effName2').value;
+            const effDesp2 = document.getElementById('effDesp2').value;
+            const effName3 = document.getElementById('effName3').value;
+            const effDesp3 = document.getElementById('effDesp3').value;
+            const effName4 = document.getElementById('effName4').value;
+            const effDesp4 = document.getElementById('effDesp4').value;
+
             const preSkill = preSkillInput ? preSkillInput.split(',').map(s => parseInt(s.trim())).filter(s => !isNaN(s)) : [];
 
-            let data = {
-                "type": parseInt(type),
-                "power": parseInt(power),
-                "speed": parseInt(speed),
-                "mode": parseInt(mode),
-                "sb_gd": parseInt(sb_gd),
-            };
+            // 按照用户提供的范例顺序构建 JSON 对象
+            let data = {};
+            data.type = parseInt(type);
+            data.power = parseInt(power);
+            data.speed = parseInt(speed);
+            data.mode = parseInt(mode);
+            data.sb_gd = parseInt(sb_gd);
 
-            // 添加可选的 buff 模块
             if (document.getElementById('addBuff').checked) {
                 const eEffectFlag = document.getElementById('eEffectFlagInput').value;
-                const yun = document.querySelector('input[name="yun"]:checked').value === 'true';
-                const luan = document.querySelector('input[name="luan"]:checked').value === 'true';
+                const yun = document.querySelector('input[name="yun"]:checked')?.value === 'true';
+                const luan = document.querySelector('input[name="luan"]:checked')?.value === 'true';
                 const jiLv = document.getElementById('jiLv').value;
                 const hp = document.getElementById('hp').value;
                 const powerBuff = document.getElementById('powerBuff').value;
@@ -665,7 +671,6 @@
                 data.buffLevel = parseInt(buffLevel);
             }
 
-            // 添加属性加成
             if (document.getElementById('addLevelEffect').checked) {
                 const rate = document.getElementById('levelEffectRate').value;
                 const param = document.getElementById('levelEffectParam').value;
@@ -688,7 +693,6 @@
                 data.levelEffectLev = parseInt(levelEffectLev);
             }
 
-            // 添加额外攻击方式
             if (document.getElementById('addAdMode').checked) {
                 const adMode = document.getElementById('adMode').value;
                 const adModePercent = document.getElementById('adModePercent').value;
@@ -697,13 +701,17 @@
                 data.adMode = parseInt(adMode);
                 data.adModePercent = parseInt(adModePercent);
                 data.adModeLevel = parseInt(adModeLevel);
-                data.sjEff = `${id}_2`;
             }
-
+            
             data.baoji = parseFloat(baoji);
             data.baojiEffect = parseFloat(baojiEffect);
-            
-            // 添加可选的适配武器增幅模块
+
+            if (document.getElementById('addAdMode').checked) {
+                 data.sjEff = `${id}_2`;
+            }
+
+            data.yueLi = parseFloat(yueLi);
+
             if (document.getElementById('addGoodEquip').checked) {
                 const goodEquip = document.getElementById('goodEquip').value;
                 const goodEquipEffT = document.getElementById('goodEquipEffT').value;
@@ -717,35 +725,24 @@
                     "r": parseInt(goodEquipEffR)
                 };
             }
-
-            // 添加效果描述
-            const effName1 = document.getElementById('effName1').value;
-            const effDesp1 = document.getElementById('effDesp1').value;
+            
             if (effName1 || effDesp1) {
                 data.effName1 = effName1;
                 data.effDesp1 = effDesp1;
             }
-            const effName2 = document.getElementById('effName2').value;
-            const effDesp2 = document.getElementById('effDesp2').value;
             if (effName2 || effDesp2) {
                 data.effName2 = effName2;
                 data.effDesp2 = effDesp2;
             }
-            const effName3 = document.getElementById('effName3').value;
-            const effDesp3 = document.getElementById('effDesp3').value;
             if (effName3 || effDesp3) {
                 data.effName3 = effName3;
                 data.effDesp3 = effDesp3;
             }
-            // 添加新的效果描述4
-            const effName4 = document.getElementById('effName4').value;
-            const effDesp4 = document.getElementById('effDesp4').value;
             if (effName4 || effDesp4) {
                 data.effName4 = effName4;
                 data.effDesp4 = effDesp4;
             }
 
-            // 添加其他基础信息
             data.id = parseInt(id);
             data.star = parseInt(star);
             data.nick = nick;
@@ -756,13 +753,11 @@
                 [id]: 1
             };
             
-            // 将内部对象转化为 JSON 字符串，并手动拼接最外层键和逗号
             const innerJson = JSON.stringify(data, null, 2);
             const finalOutput = `"${id}": ${innerJson},`;
             document.getElementById('jsonOutput').textContent = finalOutput;
         }
 
-        // 一键复制功能
         function copyJson() {
             const jsonText = document.getElementById('jsonOutput').textContent;
             navigator.clipboard.writeText(jsonText).then(() => {
