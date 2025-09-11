@@ -19,9 +19,9 @@
 
         .container {
             background: #fff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            padding: 50px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            padding: 60px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -29,60 +29,74 @@
         }
 
         h2 {
-            font-size: 2em;
+            font-size: 2.5em;
             color: #2c3e50;
-            margin: 0;
+            margin: 0 0 10px;
+            font-weight: 600;
         }
         
         p {
             font-size: 1.2em;
-            color: #555;
-            margin: 0;
+            color: #7f8c8d;
+            margin: 0 0 40px;
+            max-width: 600px;
         }
 
         .selection-buttons {
             display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 20px;
         }
 
         .selection-buttons a {
-            padding: 15px 30px;
+            padding: 20px 40px;
             font-size: 1.1em;
             font-weight: bold;
             color: #fff;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none; /* 移除链接下划线 */
+            border-radius: 10px;
+            text-decoration: none;
             transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .selection-buttons .martial-arts-btn {
+        .selection-buttons a:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .selection-buttons .wuxue-btn {
             background-color: #3498db;
         }
 
-        .selection-buttons .martial-arts-btn:hover {
+        .selection-buttons .wuxue-btn:hover {
             background-color: #2980b9;
         }
+
+        .selection-buttons .neigong-btn {
+            background-color: #9b59b6;
+        }
+
+        .selection-buttons .neigong-btn:hover {
+            background-color: #8e44ad;
+        }
         
-        .selection-buttons .equipment-btn {
+        .selection-buttons .zhuangbei-btn {
             background-color: #2ecc71;
         }
 
-        .selection-buttons .equipment-btn:hover {
+        .selection-buttons .zhuangbei-btn:hover {
             background-color: #27ae60;
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h2>请选择您要配置的类型</h2>
-    <p>武学配置或装备配置</p>
-    <div class="selection-buttons">
-        <a href="wuxue.html" class="martial-arts-btn">武学配置</a>
-        <a href="zhuangbei.html" class="equipment-btn">装备配置</a>
+    <div class="container">
+        <div class="selection-buttons">
+            <a href="wuxue.html" class="wuxue-btn">武学配置生成器</a>
+            <a href="neigong.html" class="neigong-btn">内功配置生成器</a>
+            <a href="zhuangbei.html" class="zhuangbei-btn">装备配置生成器</a>
+        </div>
     </div>
-</div>
-
 </body>
 </html>

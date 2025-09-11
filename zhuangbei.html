@@ -24,7 +24,6 @@
             color: var(--text-color);
             margin: 0;
             padding: var(--spacing-unit);
-            padding-bottom: 260px; /* 为手机端固定底部面板预留空间 */
         }
 
         .main-container {
@@ -33,9 +32,6 @@
             width: 100%;
             max-width: 1400px;
             margin: auto;
-        }
-
-        .left-panel, .right-panel-desktop {
             background-color: var(--container-bg);
             box-shadow: var(--shadow);
             border-radius: var(--border-radius);
@@ -53,13 +49,8 @@
             min-width: 350px;
             display: flex;
             flex-direction: column;
-            position: sticky;
-            top: var(--spacing-unit);
-            height: fit-content;
-            align-self: flex-start;
         }
         
-        /* 手机端面板默认隐藏 */
         .right-panel-mobile {
             display: none;
         }
@@ -200,30 +191,36 @@
         
         /* 手机端布局 */
         @media (max-width: 768px) {
+            body {
+                padding: 0;
+                padding-bottom: 260px; /* 为固定面板留出空间 */
+            }
+
             .main-container {
-                display: block; /* 移除 flexbox 布局 */
+                flex-direction: column;
+                padding: 0;
+                box-shadow: none;
             }
 
             .left-panel {
                 width: 100%;
-                margin-bottom: 20px;
-                overflow-y: auto;
-                max-height: calc(100vh - 280px); /* 确保左侧面板可以独立滚动 */
+                border-radius: 0;
+                box-shadow: none;
+                padding: var(--spacing-unit);
             }
 
             .right-panel-desktop {
-                display: none; /* 手机端隐藏桌面面板 */
+                display: none;
             }
             
             .right-panel-mobile {
-                display: flex; /* 手机端显示手机面板 */
+                display: flex;
                 flex-direction: column;
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                height: auto;
-                max-height: 260px;
+                height: 260px; /* 固定高度 */
                 border-radius: 0;
                 box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
                 border-top-left-radius: var(--border-radius);
@@ -240,11 +237,12 @@
 
             .right-panel-mobile #output-mobile {
                 font-size: 12px;
-                max-height: calc(100% - 110px);
+                max-height: 150px;
             }
 
             .right-panel-mobile #copyBtn-mobile {
-                margin-top: var(--spacing-unit);
+                margin-top: 10px;
+                padding: 10px 20px;
             }
         }
     </style>
@@ -325,6 +323,9 @@
                     <option value="4">B (4)</option>
                     <option value="5">A (5)</option>
                     <option value="6">S (6)</option>
+                    <option value="7">SS (7)</option>
+                    <option value="8">SSS (8)</option>
+                    <option value="9">EX (9)</option>
                 </select>
             </div>
 
@@ -339,7 +340,7 @@
             <div class="form-group">
                 <label>可铸造特性 (tx)</label>
                 <div id="traits" class="trait-container">
-                    </div>
+                </div>
                 <button class="add-button" onclick="addTrait()">添加特性</button>
             </div>
 

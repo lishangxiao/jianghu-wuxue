@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内功配置生成器</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --text-color: #333;
+            --input-bg: #fafafa;
+            --input-border: #e0e0e0;
+            --accent-color: #3498db;
+            --hover-color: #2980b9;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --spacing-unit: 20px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: var(--spacing-unit);
+            box-sizing: border-box;
+            display: flex; /* 桌面端居中 */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            gap: var(--spacing-unit);
+            background-color: var(--container-bg);
+            padding: var(--spacing-unit);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            height: calc(100vh - 40px); /* 桌面端高度 */
+        }
+
+        .controls {
+            flex: 1;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            border-right: 1px solid var(--input-border);
+            overflow-y: auto;
+            max-height: 100%; /* 桌面端可滚动 */
+        }
+
+        .output-area-desktop {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 100%; /* 桌面端可滚动 */
+        }
+
+        .output-area-mobile {
+            display: none;
+        }
+
+        h2 {
+            display: none;
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            autocomplete: off;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        .add-levelmate-btn, .remove-levelmate-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .add-levelmate-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .add-levelmate-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .remove-levelmate-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .remove-levelmate-btn:hover {
+            background-color: #c0392b;
+        }
+
+        #output-desktop, #output-mobile {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre;
+            overflow-x: auto;
+            flex-grow: 1;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 400px;
+        }
+
+        .copy-btn {
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .section-header {
+            font-weight: bold;
+            color: #34495e;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .eff-item, .levelmate-item {
+            border: 1px dashed #bdc3c7;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .eff-item h4 {
+            margin-top: 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        /* Mobile Layout */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                /* 关键改动 */
+                flex-direction: column;
+                height: 100vh;
+                width: 100vw;
+                padding: 0;
+                box-sizing: border-box;
+                box-shadow: none;
+            }
+
+            .controls {
+                flex-grow: 1; /* 占据剩余所有空间 */
+                padding: 15px;
+                overflow-y: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--input-border);
+            }
+
+            .output-area-desktop {
+                display: none;
+            }
+
+            .output-area-mobile {
+                display: flex;
+                flex-direction: column;
+                height: 300px; /* 固定高度，但内容可滚动 */
+                background-color: var(--container-bg);
+                box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+                border-top-left-radius: var(--border-radius);
+                border-top-right-radius: var(--border-radius);
+                padding: var(--spacing-unit);
+                box-sizing: border-box;
+                z-index: 1000;
+                overflow-y: auto; /* 允许内部滚动 */
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #output-mobile {
+                min-height: 150px;
+                font-size: 13px;
+                flex-grow: 1;
+            }
+
+            .copy-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <h2>内功配置</h2>
+        <div class="form-group">
+            <label for="id">内功ID</label>
+            <input type="number" id="id" placeholder="例如: 3816" min="0" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="nick">装备名称</label>
+            <input type="text" id="nick" placeholder="例如: 九阳护体神功" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="desp">装备描述</label>
+            <textarea id="desp" rows="3" placeholder="例如: 九阳护体神功是天下至阳神功..." autocomplete="off"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="icon">图标ID</label>
+            <input type="number" id="icon" placeholder="例如: 3001" min="0" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="star">品级</label>
+            <select id="star" autocomplete="off">
+                <option value="0">0: ?</option>
+                <option value="1">1: E</option>
+                <option value="2">2: D</option>
+                <option value="3">3: C</option>
+                <option value="4">4: B</option>
+                <option value="5">5: A</option>
+                <option value="6" selected>6: S</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="xiuWei">修为比例</label>
+            <input type="number" id="xiuWei" placeholder="例如: 15.0" step="0.1" value="15.0" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="preSkill">前置内功 (用逗号分隔ID)</label>
+            <input type="text" id="preSkill" placeholder="例如: 1234,5678" autocomplete="off">
+        </div>
+
+        <div class="section-header">升级效果 (eff) - 共9重</div>
+        <div id="eff-container">
+            </div>
+
+        <div class="section-header">升级前置 (levelMate)</div>
+        <div id="levelmate-container">
+            </div>
+        <button class="add-levelmate-btn" onclick="addLevelMate()">添加升级前置</button>
+    </div>
+
+    <div class="output-area-desktop">
+        <h2>JSON 片段输出</h2>
+        <pre id="output-desktop"></pre>
+        <button id="copyBtn-desktop" class="copy-btn" onclick="copyJson()">一键复制</button>
+    </div>
+
+    <div class="output-area-mobile">
+        <pre id="output-mobile"></pre>
+        <button id="copyBtn-mobile" class="copy-btn" onclick="copyJson()">一键复制</button>
+    </div>
+</div>
+
+<script>
+    const typeMap = {
+        '绝对血量': 1, '血量': 2, '速度': 4, '闪避': 16, '格挡': 64,
+        '拳脚威力': 512, '刀法威力': 2048, '剑法威力': 8192,
+        '绝对攻击': 65536, '攻击': 131072, '免伤': 524288, '吸血': 2097152,
+        '回血': 8388608, '爆伤': 16777216, '反伤': 33554432, '暴击': 134217728,
+        '武器万分比': 134217734, '基础伤害万分比': 134217735,
+        '武功万分比': 134217736
+    };
+
+    const typeOptions = Object.keys(typeMap).map(key => `<option value="${typeMap[key]}">${key} (${typeMap[key]})</option>`).join('');
+
+    const effContainer = document.getElementById('eff-container');
+    const levelMateContainer = document.getElementById('levelmate-container');
+    const outputDesktopElem = document.getElementById('output-desktop');
+    const outputMobileElem = document.getElementById('output-mobile');
+    const copyBtnDesktop = document.getElementById('copyBtn-desktop');
+    const copyBtnMobile = document.getElementById('copyBtn-mobile');
+    const mobileOutputArea = document.querySelector('.output-area-mobile');
+
+    function createEffItem(index) {
+        const item = document.createElement('div');
+        item.className = 'eff-item';
+        item.innerHTML = `
+            <h4>第 ${index + 1} 重</h4>
+            <div class="form-group">
+                <label>效果名称 (nick)</label>
+                <input type="text" class="eff-nick" placeholder="例如: 武学至理" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>效果描述 (desp)</label>
+                <input type="text" class="eff-desp" placeholder="例如: 增强各类武功%d%%威力" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>属性类型 (t)</label>
+                <select class="eff-t" autocomplete="off">${typeOptions}</select>
+            </div>
+            <div class="form-group">
+                <label>具体数值 (v)</label>
+                <input type="number" class="eff-v" placeholder="例如: 10" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>回合数 (r)</label>
+                <input type="number" class="eff-r" value="0" placeholder="默认: 0" autocomplete="off">
+            </div>
+        `;
+        return item;
+    }
+
+    function createLevelMateItem() {
+        const item = document.createElement('div');
+        item.className = 'levelmate-item';
+        item.innerHTML = `
+            <div class="form-group">
+                <label>升级重数</label>
+                <input type="number" class="levelmate-level" placeholder="例如: 4" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>前置物品ID</label>
+                <input type="number" class="levelmate-id" placeholder="例如: 7036" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>需求数量</label>
+                <input type="number" class="levelmate-count" placeholder="例如: 100" autocomplete="off">
+            </div>
+            <button class="remove-levelmate-btn" onclick="removeLevelMate(this)">删除</button>
+        `;
+        return item;
+    }
+
+    function addLevelMate() {
+        levelMateContainer.appendChild(createLevelMateItem());
+        updateJSON();
+    }
+
+    function removeLevelMate(btn) {
+        btn.parentElement.remove();
+        updateJSON();
+    }
+
+    function collectFormData() {
+        const id = document.getElementById('id').value;
+        const nick = document.getElementById('nick').value;
+        const desp = document.getElementById('desp').value;
+        const icon = document.getElementById('icon').value;
+        const star = document.getElementById('star').value;
+        const xiuWei = document.getElementById('xiuWei').value;
+        const preSkillStr = document.getElementById('preSkill').value;
+
+        const data = {};
+
+        if (!id) return null;
+        data[id] = {};
+        const config = data[id];
+
+        config.eff = [];
+        const effItems = effContainer.querySelectorAll('.eff-item');
+        effItems.forEach(item => {
+            const eff = {};
+            const effNick = item.querySelector('.eff-nick').value;
+            const effDesp = item.querySelector('.eff-desp').value;
+            const effT = item.querySelector('.eff-t').value;
+            const effV = item.querySelector('.eff-v').value;
+            const effR = item.querySelector('.eff-r').value;
+
+            if (effNick) eff.nick = effNick;
+            if (effDesp) eff.desp = effDesp;
+            if (effT) eff.t = parseInt(effT) || 0;
+            if (effV) eff.v = parseInt(effV) || 0;
+            if (effR) eff.r = parseInt(effR) || 0;
+
+            config.eff.push(eff);
+        });
+
+        if (xiuWei) config.xiuWei = parseFloat(xiuWei) || 0;
+        config.id = parseInt(id) || 0;
+        if (star) config.star = parseInt(star) || 0;
+        if (nick) config.nick = nick;
+        if (desp) config.desp = desp;
+        if (icon) config.icon = parseInt(icon) || 0;
+
+        if (preSkillStr) {
+            config.preSkill = preSkillStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        } else {
+            config.preSkill = [];
+        }
+
+        config.mate = {};
+        config.mate[id] = 1;
+
+        const levelMateItems = levelMateContainer.querySelectorAll('.levelmate-item');
+        if (levelMateItems.length > 0) {
+            config.levelMate = {};
+            let hasLevelMate = false;
+            levelMateItems.forEach(item => {
+                const level = item.querySelector('.levelmate-level').value;
+                const matId = item.querySelector('.levelmate-id').value;
+                const count = item.querySelector('.levelmate-count').value;
+
+                if (level && matId && count) {
+                    config.levelMate[level] = {};
+                    config.levelMate[level][matId] = parseInt(count);
+                    hasLevelMate = true;
+                }
+            });
+            if (!hasLevelMate) {
+                delete config.levelMate;
+            }
+        }
+
+        return data;
+    }
+
+    function updateJSON() {
+        const data = collectFormData();
+        if (data) {
+            const jsonString = JSON.stringify(data, null, 2);
+            const finalOutput = `"${document.getElementById('id').value}": ${jsonString},`;
+            outputDesktopElem.textContent = finalOutput;
+            outputMobileElem.textContent = finalOutput;
+        } else {
+            const placeholder = '请至少输入内功ID';
+            outputDesktopElem.textContent = placeholder;
+            outputMobileElem.textContent = placeholder;
+        }
+    }
+
+    document.querySelectorAll('input, select, textarea').forEach(elem => {
+        elem.addEventListener('input', updateJSON);
+    });
+
+    document.addEventListener('input', (e) => {
+        if (e.target.closest('.levelmate-item')) {
+            updateJSON();
+        }
+    });
+
+    async function copyJson() {
+        const isMobile = window.innerWidth <= 768;
+        const outputElement = isMobile ? outputMobileElem : outputDesktopElem;
+        const copyBtn = isMobile ? copyBtnMobile : copyBtnDesktop;
+        const textToCopy = outputElement.textContent;
+
+        if (textToCopy && textToCopy !== '请至少输入内功ID') {
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                copyBtn.textContent = '已复制！';
+                setTimeout(() => {
+                    copyBtn.textContent = '一键复制';
+                }, 2000);
+            } catch (err) {
+                console.error('复制失败: ', err);
+                alert('复制失败，请手动复制。');
+            }
+        }
+    }
+
+    // Initial setup: create the 9 eff items
+    for (let i = 0; i < 9; i++) {
+        effContainer.appendChild(createEffItem(i));
+    }
+    updateJSON();
+</script>
+
+</body>
+</html>
