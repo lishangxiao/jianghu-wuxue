@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPC JSON 配置生成器</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        .input-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1em;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .input-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* 统一的网格布局类 */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        /* 针对不同内容的网格布局 */
+        .single-line-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            align-items: end;
+        }
+
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        @media (max-width: 768px) {
+            .grid-layout, .single-line-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .option-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .option-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+        }
+        .option-group input[type="radio"] {
+            margin-right: 5px;
+        }
+        .dynamic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .dynamic-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #fff;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .dynamic-item input {
+            flex-grow: 1;
+        }
+        .btn-add, .btn-remove {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .btn-add {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+        .btn-add:hover {
+            background-color: #27ae60;
+        }
+        .btn-remove {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+        .btn-remove:hover {
+            background-color: #c0392b;
+        }
+        .output-section {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #2d3436;
+            color: #f5f6fa;
+            border-radius: 8px;
+            position: relative;
+        }
+        .output-section label {
+            color: #bdc3c7;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        #json-output {
+            width: 100%;
+            height: 300px;
+            background-color: #2d3436;
+            color: #f5f6fa;
+            border: none;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            resize: vertical;
+            padding: 8px;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .copy-btn:hover {
+            background-color: #2980b9;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid #ccc;
+            margin: 30px 0;
+        }
+        
+        /* Modal 和其他样式保持不变 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            padding-top: 50px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 10px;
+            position: relative;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .head-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .head-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .head-item:hover {
+            background-color: #e9ecef;
+        }
+        .head-item img {
+            width: 60px;
+            height: 60px;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            object-fit: contain;
+        }
+        .head-item span {
+            font-size: 0.8em;
+            color: #555;
+        }
+        .head-select-btn {
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .status-message {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #888;
+        }
+        .status-message.error {
+            color: #e74c3c;
+        }
+        .status-message.success {
+            color: #2ecc71;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NPC JSON 配置生成器</h1>
+    <p>请在下方填写信息，JSON 片段将自动生成。</p>
+
+    <form id="npc-form">
+        <div class="input-group">
+            <h2>基本信息</h2>
+            <div class="grid-layout">
+                <div class="grid-item">
+                    <label for="npc-id">NPC ID (顶级键名与 id)</label>
+                    <input type="number" id="npc-id" placeholder="请输入NPC ID，例如：20055">
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <h2>人物属性</h2>
+            <div class="grid-layout">
+                <div class="grid-item">
+                    <label for="intr">人物介绍 (intr)</label>
+                    <input type="text" id="intr" placeholder="请输入人物介绍，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="nick">人物名称 (nick)</label>
+                    <input type="text" id="nick" placeholder="请输入人物名称，不填默认为 npc">
+                </div>
+                <div class="grid-item">
+                    <label for="lv">等级 (lv)</label>
+                    <input type="number" id="lv" placeholder="请输入等级，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="hpXZ">血量成长 (hpXZ)</label>
+                    <input type="number" id="hpXZ" step="0.01" placeholder="请输入血量成长，不填默认为 0.0">
+                </div>
+                <div class="grid-item">
+                    <label for="powerXZ">攻击成长 (powerXZ)</label>
+                    <input type="number" id="powerXZ" step="0.01" placeholder="请输入攻击成长，不填默认为 0.0">
+                </div>
+                <div class="grid-item">
+                    <label for="revival">复活时间 (revival)</label>
+                    <input type="number" id="revival" placeholder="请输入复活时间，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="npcPower">NPC攻击 (npcPower)</label>
+                    <input type="number" id="npcPower" placeholder="请输入NPC攻击，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="npcHp">NPC生命 (npcHp)</label>
+                    <input type="number" id="npcHp" placeholder="请输入NPC生命，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="geDang">格挡 (geDang)</label>
+                    <input type="number" id="geDang" placeholder="请输入格挡值，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="shanBi">闪避 (shanBi)</label>
+                    <input type="number" id="shanBi" placeholder="请输入闪避值，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="group">组 (group)</label>
+                    <input type="number" id="group" placeholder="请输入分组 ID，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="money">掉落银两 (money)</label>
+                    <input type="number" id="money" placeholder="请输入掉落银两数量，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="exp">掉落经验 (exp)</label>
+                    <input type="number" id="exp" placeholder="请输入掉落经验数量，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="yueLi">掉落阅历 (yueLi)</label>
+                    <input type="number" id="yueLi" placeholder="请输入掉落阅历数量，不填默认为 0">
+                </div>
+                <div class="grid-item">
+                    <label for="daoDe">掉落道德 (daoDe)</label>
+                    <input type="number" id="daoDe" placeholder="请输入掉落道德数量，不填默认为 0">
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <h2>对话 (speak)</h2>
+            <label for="speak">NPC 对话 (每行一句)</label>
+            <textarea id="speak" placeholder="请输入 NPC 对话，每行一句。不填默认为 0"></textarea>
+        </div>
+
+        <div class="single-line-grid">
+            <div class="input-group">
+                <h2>武学 (skill)</h2>
+                <label for="skill-input">武学 ID (可直接输入或从下拉框选择)</label>
+                <input type="text" id="skill-input" list="skill-list" placeholder="输入武学名称或 ID，例如：太平拳 或 3001">
+                <p class="status-message" id="skill-status"></p>
+                <datalist id="skill-list"></datalist>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <h2>其他属性</h2>
+            <div class="grid-layout">
+                <div class="grid-item">
+                    <label for="sign-select">NPC 图标 (sign)</label>
+                    <select id="sign-select">
+                        <option value="2">男NPC</option>
+                        <option value="0">主角</option>
+                        <option value="1">入口</option>
+                        <option value="3">女NPC</option>
+                        <option value="10">地图商店主人</option>
+                        <option value="13">龙胆草</option>
+                        <option value="15">怪物随从</option>
+                        <option value="16">BOSS怪</option>
+                        <option value="17">药店主人</option>
+                        <option value="18">马</option>
+                        <option value="19">箱子</option>
+                        <option value="20">衣服店</option>
+                        <option value="21">武馆</option>
+                        <option value="22">镖头</option>
+                        <option value="23">告示牌</option>
+                        <option value="25">石碑香炉圣火台</option>
+                        <option value="26">木人</option>
+                        <option value="27">洛阳肉店屠夫</option>
+                        <option value="28">琴</option>
+                        <option value="29">船夫</option>
+                        <option value="32">樵夫</option>
+                        <option value="33">乞丐</option>
+                        <option value="34">茶摊相关</option>
+                        <option value="35">当铺掌柜</option>
+                        <option value="36">和尚</option>
+                        <option value="37">杂草，蔬菜，冰蚕</option>
+                        <option value="38">茶叶</option>
+                        <option value="39">门派任务怪物</option>
+                        <option value="40">猴子</option>
+                    </select>
+                </div>
+                <div class="grid-item">
+                    <label for="quality-select">NPC 种类 (quality)</label>
+                    <select id="quality-select">
+                        <option value="4">NPC</option>
+                        <option value="1">主角</option>
+                        <option value="2">随从</option>
+                        <option value="3">随从</option>
+                    </select>
+                </div>
+                <div class="grid-item">
+                    <label for="as-select">行为 (as)</label>
+                    <select id="as-select">
+                        <option value="1">未知</option>
+                        <option value="0">未知</option>
+                        <option value="2">切磋</option>
+                        <option value="3">攻击</option>
+                        <option value="4">无用</option>
+                        <option value="5">直接触发</option>
+                    </select>
+                </div>
+                <div class="grid-item">
+                    <label for="sex-select">性别 (sex)</label>
+                    <select id="sex-select">
+                        <option value="0">男</option>
+                        <option value="1">女</option>
+                        <option value="2">阴阳人</option>
+                    </select>
+                </div>
+                <div class="grid-item">
+                    <label for="head-input">头像 (head)</label>
+                    <input type="number" id="head-input" placeholder="请输入头像 ID，例如：615">
+                </div>
+                <div class="grid-item" style="align-self: end;">
+                    <button type="button" class="head-select-btn" onclick="openHeadModal()">选择头像</button>
+                </div>
+                <p class="status-message" id="head-status"></p>
+                <div id="head-preview-container" style="margin-top: 10px;"></div>
+                <div class="grid-item">
+                    <label>是否免晕 (mianYun)</label>
+                    <div class="option-group">
+                        <label><input type="radio" name="mianYun" value="0" checked>可晕</label>
+                        <label><input type="radio" name="mianYun" value="1">免晕</label>
+                    </div>
+                </div>
+                <div class="grid-item">
+                    <label for="xingGe-select">性格 (xingGe)</label>
+                    <select id="xingGe-select">
+                        <option value="0">无性格</option>
+                        <option value="1">好色如命</option>
+                        <option value="2">侠肝义胆</option>
+                        <option value="3">怜香惜玉</option>
+                        <option value="4">药王弟子</option>
+                        <option value="5">爱财如命</option>
+                        <option value="6">欺软怕硬</option>
+                        <option value="7">暗器高手</option>
+                        <option value="8">舍生忘死</option>
+                        <option value="9">身手敏捷</option>
+                        <option value="10">药罐子</option>
+                        <option value="11">闻鸡起舞</option>
+                        <option value="12">心狠手辣</option>
+                        <option value="13">身轻如燕</option>
+                        <option value="14">皮糙肉厚</option>
+                        <option value="15">明哲保身</option>
+                        <option value="16">妙手成金</option>
+                        <option value="17">武林世家</option>
+                        <option value="18">官僚弟子</option>
+                        <option value="19">草根平民</option>
+                        <option value="20">商贾巨富</option>
+                        <option value="21">霹雳珠</option>
+                        <option value="22">倾国倾城</option>
+                        <option value="23">天魔解体</option>
+                        <option value="24">冰魄银针</option>
+                        <option value="25">暴雨梨花针</option>
+                        <option value="26">乾坤一掷</option>
+                        <option value="27">江湖郎中</option>
+                        <option value="28">天生媚骨</option>
+                        <option value="29">悬壶济世</option>
+                        <option value="31">陷阵之志</option>
+                        <option value="32">天生尤物</option>
+                        <option value="33">醉酒当歌</option>
+                        <option value="35">天魔九舞</option>
+                        <option value="36">剑走偏锋</option>
+                    </select>
+                </div>
+                 <div class="grid-item">
+                    <label>是否唯一 (sole)</label>
+                    <div class="option-group">
+                        <label><input type="radio" name="sole" value="true" checked>是</label>
+                        <label><input type="radio" name="sole" value="false">否</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="input-group">
+            <h2>掉落物 (drop)</h2>
+            <div id="drop-container" class="dynamic-list">
+            </div>
+            <button type="button" class="btn-add" onclick="addDrop()">添加掉落物</button>
+            <p class="status-message" id="drop-status"></p>
+        </div>
+
+        <div class="input-group">
+            <h2>关联文件 (npc_funs)</h2>
+            <div id="funs-container" class="dynamic-list">
+            </div>
+            <button type="button" class="btn-add" onclick="addFun()">添加关联文件</button>
+        </div>
+    </form>
+
+    <hr>
+    
+    <div class="input-group">
+        <h2>批量生成配置</h2>
+        <div class="grid-layout">
+            <div class="grid-item">
+                <label for="batch-count">生成数量</label>
+                <input type="number" id="batch-count" placeholder="请输入生成数量" value="10" min="1">
+            </div>
+            <div class="grid-item">
+                <label>血量范围</label>
+                <div class="grid-layout" style="gap: 10px;">
+                    <input type="number" id="batch-hp-min" placeholder="最小血量" value="100">
+                    <input type="number" id="batch-hp-max" placeholder="最大血量" value="200">
+                </div>
+            </div>
+            <div class="grid-item">
+                <label>攻击范围</label>
+                <div class="grid-layout" style="gap: 10px;">
+                    <input type="number" id="batch-power-min" placeholder="最小攻击" value="50">
+                    <input type="number" id="batch-power-max" placeholder="最大攻击" value="100">
+                </div>
+            </div>
+            <div class="grid-item">
+                <label for="batch-skill-type">武学种类</label>
+                <select id="batch-skill-type">
+                    <option value="0">不限</option>
+                    <option value="1">拳</option>
+                    <option value="2">剑</option>
+                    <option value="3">刀</option>
+                </select>
+            </div>
+            <div class="grid-item">
+                <label for="batch-skill-star">武学品级</label>
+                <select id="batch-skill-star">
+                    <option value="0">不限</option>
+                    <option value="1">E</option>
+                    <option value="2">D</option>
+                    <option value="3">C</option>
+                    <option value="4">B</option>
+                    <option value="5">A</option>
+                    <option value="6">S</option>
+                </select>
+            </div>
+        </div>
+        <button type="button" class="btn-add" id="generate-batch-btn" style="width: 100%; margin-top: 20px;">批量生成</button>
+    </div>
+
+    <hr>
+
+    <div class="output-section">
+        <h2>JSON 片段输出</h2>
+        <pre><textarea id="json-output" readonly></textarea></pre>
+        <button type="button" class="copy-btn" onclick="copyJson()">一键复制</button>
+    </div>
+
+</div>
+
+<div id="headModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeHeadModal()">&times;</span>
+        <h2>选择头像</h2>
+        <div id="head-grid" class="head-grid">
+        </div>
+    </div>
+</div>
+
+<script>
+    let skillData = {};
+    let headIds = [];
+    let dropData = {};
+    let funCount = 0;
+
+    const elements = {
+        npcForm: document.getElementById('npc-form'),
+        npcId: document.getElementById('npc-id'),
+        intr: document.getElementById('intr'),
+        nick: document.getElementById('nick'),
+        skillInput: document.getElementById('skill-input'),
+        skillList: document.getElementById('skill-list'),
+        skillStatus: document.getElementById('skill-status'),
+        lv: document.getElementById('lv'),
+        hpXZ: document.getElementById('hpXZ'),
+        powerXZ: document.getElementById('powerXZ'),
+        speak: document.getElementById('speak'),
+        revival: document.getElementById('revival'),
+        npcPower: document.getElementById('npcPower'),
+        npcHp: document.getElementById('npcHp'),
+        signSelect: document.getElementById('sign-select'),
+        qualitySelect: document.getElementById('quality-select'),
+        asSelect: document.getElementById('as-select'),
+        sexSelect: document.getElementById('sex-select'),
+        headInput: document.getElementById('head-input'),
+        headStatus: document.getElementById('head-status'),
+        headPreviewContainer: document.getElementById('head-preview-container'),
+        headModal: document.getElementById('headModal'),
+        headGrid: document.getElementById('head-grid'),
+        mianYunRadios: document.getElementsByName('mianYun'),
+        geDang: document.getElementById('geDang'),
+        shanBi: document.getElementById('shanBi'),
+        xingGeSelect: document.getElementById('xingGe-select'),
+        soleRadios: document.getElementsByName('sole'),
+        dropContainer: document.getElementById('drop-container'),
+        dropStatus: document.getElementById('drop-status'),
+        funsContainer: document.getElementById('funs-container'),
+        money: document.getElementById('money'),
+        exp: document.getElementById('exp'),
+        yueLi: document.getElementById('yueLi'),
+        daoDe: document.getElementById('daoDe'),
+        jsonOutput: document.getElementById('json-output'),
+        
+        // 新增批量生成元素
+        batchCount: document.getElementById('batch-count'),
+        batchHpMin: document.getElementById('batch-hp-min'),
+        batchHpMax: document.getElementById('batch-hp-max'),
+        batchPowerMin: document.getElementById('batch-power-min'),
+        batchPowerMax: document.getElementById('batch-power-max'),
+        batchSkillType: document.getElementById('batch-skill-type'),
+        batchSkillStar: document.getElementById('batch-skill-star'),
+        generateBatchBtn: document.getElementById('generate-batch-btn')
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log("DOM 内容已加载。开始异步获取数据...");
+        elements.npcId.value = 20055;
+        
+        await Promise.all([fetchSkillData(), fetchHeadIds(), fetchDropData()]);
+        
+        console.log("所有外部数据文件已加载。");
+        
+        setTimeout(() => {
+            console.log("DOM 渲染完成，附加事件监听器并首次生成 JSON。");
+            attachEventListeners();
+            generateJson();
+        }, 100); 
+    });
+
+    function attachEventListeners() {
+        console.log("附加事件监听器...");
+        elements.npcForm.addEventListener('input', generateJson);
+        elements.npcForm.addEventListener('change', generateJson);
+        elements.headInput.addEventListener('input', () => {
+            updateHeadPreview();
+            generateJson();
+        });
+        elements.npcId.addEventListener('input', () => {
+            funCount = 0; 
+        });
+        
+        // 批量生成按钮事件
+        elements.generateBatchBtn?.addEventListener('click', generateBatchJson);
+    }
+
+    async function fetchData(url, statusElement, dataObject, successMessage) {
+        console.log(`正在从 ${url} 获取数据...`);
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (Array.isArray(dataObject)) {
+                dataObject.splice(0, dataObject.length, ...data); 
+            } else {
+                Object.assign(dataObject, data);
+            }
+            statusElement.className = 'status-message success';
+            statusElement.textContent = successMessage;
+            console.log(`${url} 加载成功。`);
+            return true;
+        } catch (error) {
+            console.error(`Error fetching ${url}:`, error);
+            statusElement.className = 'status-message error';
+            statusElement.textContent = `无法加载 ${url}，请检查文件是否存在且格式正确。`;
+            return false;
+        }
+    }
+
+    async function fetchSkillData() {
+        await fetchData('skill/skill.json', elements.skillStatus, skillData, '武学数据加载成功！');
+        populateSkillList();
+    }
+
+    async function fetchHeadIds() {
+        await fetchData('head/head_ids.json', elements.headStatus, headIds, '头像 ID 列表加载成功！');
+    }
+
+    async function fetchDropData() {
+        await fetchData('prop/drop.json', elements.dropStatus, dropData, '掉落物数据加载成功！');
+    }
+
+    function addDrop() {
+        console.log("开始添加掉落物...");
+        const dropItem = document.createElement('div');
+        dropItem.className = 'dynamic-item';
+        const listId = `drop-list-${Date.now()}`;
+        
+        dropItem.innerHTML = `
+            <input type="text" class="drop-pid" placeholder="掉落物品ID或名称" list="${listId}">
+            <datalist id="${listId}"></datalist>
+            <input type="number" class="drop-chance" placeholder="概率 (例如: 10000)" value="10000">
+            <input type="number" class="drop-count" placeholder="数量" value="1">
+            <button type="button" class="btn-remove" onclick="removeDynamicItem(this)">删除</button>
+        `;
+
+        const dropInput = dropItem.querySelector('.drop-pid');
+        const datalist = dropItem.querySelector(`#${listId}`);
+
+        for (const id in dropData) {
+            const prop = dropData[id];
+            const option = document.createElement('option');
+            option.value = prop.nick; 
+            option.textContent = `${prop.id} - ${prop.nick}`;
+            datalist.appendChild(option);
+        }
+        
+        dropInput.addEventListener('change', (e) => {
+            const value = e.target.value;
+            const item = Object.values(dropData).find(d => d.nick === value);
+            if (item) {
+                e.target.value = item.id;
+            }
+        });
+        
+        elements.dropContainer.appendChild(dropItem);
+        console.log("掉落物添加成功，正在重新生成 JSON。");
+        generateJson();
+    }
+    
+    function addFun() {
+        console.log("开始添加关联文件...");
+        const npcId = elements.npcId?.value?.trim();
+        if (!npcId) {
+            alert("请先输入NPC ID");
+            return;
+        }
+
+        const funItem = document.createElement('div');
+        funItem.className = 'dynamic-item';
+        
+        funCount++;
+        const funName = `${npcId}_${funCount}`;
+
+        funItem.innerHTML = `
+            <input type="text" class="fun-name" placeholder="关联文件名" value="${funName}">
+            <button type="button" class="btn-remove" onclick="removeDynamicItem(this)">删除</button>
+        `;
+        elements.funsContainer.appendChild(funItem);
+        console.log("关联文件添加成功，正在重新生成 JSON。");
+        generateJson();
+    }
+    
+    function removeDynamicItem(button) {
+        console.log("正在删除动态项，并重新生成 JSON。");
+        button.closest('.dynamic-item').remove();
+        generateJson();
+    }
+
+    function populateSkillList() {
+        elements.skillList.innerHTML = '';
+        for (const id in skillData) {
+            const skill = skillData[id];
+            const option = document.createElement('option');
+            option.value = `${id}`;
+            option.textContent = `${id} - ${skill.nick}`;
+            elements.skillList.appendChild(option);
+        }
+    }
+
+    function updateHeadPreview() {
+        const id = elements.headInput?.value;
+        const preview = elements.headPreviewContainer;
+        preview.innerHTML = '';
+        if (id) {
+            const img = document.createElement('img');
+            img.src = `head/res_head_head${id}.png`;
+            img.alt = `头像 ${id}`;
+            img.style.width = '60px';
+            img.style.height = '60px';
+            img.style.border = '2px solid #3498db';
+            img.style.borderRadius = '5px';
+            img.style.marginTop = '8px';
+            img.style.objectFit = 'contain';
+            img.onerror = () => {
+                preview.innerHTML = '<span style="color: #e74c3c;">头像文件未找到。</span>';
+            };
+            preview.appendChild(img);
+        }
+    }
+
+    function openHeadModal() {
+        elements.headModal.style.display = "block";
+        populateHeadGrid();
+    }
+
+    function closeHeadModal() {
+        elements.headModal.style.display = "none";
+    }
+
+    function selectHead(item) {
+        const id = item.dataset.headId;
+        elements.headInput.value = id;
+        updateHeadPreview();
+        closeHeadModal();
+        generateJson();
+    }
+
+    function populateHeadGrid() {
+        elements.headGrid.innerHTML = '';
+        if (headIds.length === 0) {
+            elements.headGrid.innerHTML = '<p style="text-align: center; color: #e74c3c;">没有可用的头像。请在 `head/head_ids.json` 文件中添加头像 ID。</p>';
+            return;
+        }
+
+        headIds.forEach(id => {
+            const item = document.createElement('div');
+            item.className = 'head-item';
+            item.setAttribute('data-head-id', id);
+            item.setAttribute('onclick', 'selectHead(this)');
+            
+            const img = document.createElement('img');
+            img.src = `head/res_head_head${id}.png`;
+            img.alt = `头像 ${id}`;
+            img.title = `头像 ID: ${id}`;
+            
+            const text = document.createElement('span');
+            text.textContent = `ID: ${id}`;
+            
+            item.appendChild(img);
+            item.appendChild(text);
+            
+            elements.headGrid.appendChild(item);
+        });
+    }
+
+    window.onclick = function(event) {
+        if (event.target == elements.headModal) {
+            closeHeadModal();
+        }
+    }
+
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateJson() {
+        console.log("--- 开始生成单个 NPC 的 JSON... ---");
+        try {
+            const id = elements.npcId?.value;
+            if (!id) {
+                elements.jsonOutput.value = '// 请输入 NPC ID';
+                console.log("NPC ID 为空，无法生成 JSON。");
+                return;
+            }
+
+            const npc = {};
+            console.log("获取所有静态输入值...");
+            
+            npc.id = parseInt(elements.npcId?.value) || 0;
+            npc.intr = elements.intr?.value.trim() || "0";
+            npc.nick = elements.nick?.value.trim() || "npc";
+            const skillId = elements.skillInput?.value;
+            const skillNum = parseInt(skillId);
+            npc.skill = isNaN(skillNum) ? 0 : skillNum;
+            npc.lv = parseInt(elements.lv?.value) || 0;
+            npc.hpXZ = parseFloat(elements.hpXZ?.value) || 0.0;
+            npc.powerXZ = parseFloat(elements.powerXZ?.value) || 0.0;
+            const speakText = elements.speak?.value.trim();
+            npc.speak = speakText ? speakText.split('\n').map(s => s.trim()) : ["0"];
+            npc.revival = parseInt(elements.revival?.value) || 0;
+            npc.npcPower = parseInt(elements.npcPower?.value) || 0;
+            npc.npcHp = parseInt(elements.npcHp?.value) || 0;
+            npc.sign = parseInt(elements.signSelect?.value) || 0;
+            npc.quality = parseInt(elements.qualitySelect?.value) || 4;
+            npc.as = parseInt(elements.asSelect?.value) || 0;
+            npc.sex = parseInt(elements.sexSelect?.value) || 0;
+            npc.head = parseInt(elements.headInput?.value) || 0;
+
+            let mianYunValue = 0;
+            const mianYunElement = document.querySelector('input[name="mianYun"]:checked');
+            if (mianYunElement && mianYunElement.value) {
+                mianYunValue = parseInt(mianYunElement.value);
+            }
+            npc.mianYun = mianYunValue;
+            
+            npc.geDang = parseInt(elements.geDang?.value) || 0;
+            npc.shanBi = parseInt(elements.shanBi?.value) || 0;
+            npc.xingGe = parseInt(elements.xingGeSelect?.value) || 0;
+            
+            let soleValue = true;
+            const soleElement = document.querySelector('input[name="sole"]:checked');
+            if (soleElement && soleElement.value) {
+                soleValue = soleElement.value === 'true';
+            }
+            npc.sole = soleValue;
+            
+            npc.group = parseInt(elements.group?.value) || 0;
+            npc.money = parseInt(elements.money?.value) || 0;
+            npc.exp = parseInt(elements.exp?.value) || 0;
+            npc.yueLi = parseInt(elements.yueLi?.value) || 0;
+            npc.daoDe = parseInt(elements.daoDe?.value) || 0;
+
+            const dropItems = [];
+            elements.dropContainer?.querySelectorAll('.dynamic-item').forEach((item, index) => {
+                const pidInput = item.querySelector('.drop-pid');
+                const dropInput = item.querySelector('.drop-chance');
+                const countInput = item.querySelector('.drop-count');
+
+                if (!pidInput || !dropInput || !countInput) {
+                    return;
+                }
+
+                const pidValue = pidInput.value.trim();
+                const dropValue = dropInput.value.trim();
+                const countValue = countInput.value.trim();
+
+                if (pidValue) {
+                    let pid = parseInt(pidValue);
+                    if (isNaN(pid)) {
+                        const dropEntry = Object.values(dropData).find(d => d.nick === pidValue);
+                        if (dropEntry) {
+                            pid = dropEntry.id;
+                        } else {
+                            return;
+                        }
+                    }
+
+                    const drop = parseInt(dropValue) || 0;
+                    const count = parseInt(countValue) || 1;
+                    
+                    if (pid) {
+                        dropItems.push({ pid, drop, count });
+                    }
+                }
+            });
+            npc.drop = dropItems.length > 0 ? dropItems : [];
+            
+            const funs = [];
+            elements.funsContainer?.querySelectorAll('.dynamic-item').forEach((item, index) => {
+                const funInput = item.querySelector('.fun-name');
+                if (!funInput) {
+                    return;
+                }
+                
+                const funName = funInput.value.trim();
+                if (funName) {
+                    funs.push(funName);
+                }
+            });
+            npc.npc_funs = funs.length > 0 ? funs : ["0"];
+            
+            const jsonString = JSON.stringify(npc, null, 2);
+            elements.jsonOutput.value = `"${id}": ${jsonString},`;
+            console.log("JSON 生成成功！");
+
+        } catch (error) {
+            console.error("JSON 字符串化失败：", error);
+            elements.jsonOutput.value = `// 生成 JSON 时出错: ${error.message}\n请检查控制台获取更多详细信息。`;
+        }
+    }
+
+    function generateBatchJson() {
+        console.log("--- 开始批量生成 NPC JSON... ---");
+        try {
+            const count = parseInt(elements.batchCount?.value) || 1;
+            const minHp = parseInt(elements.batchHpMin?.value) || 0;
+            const maxHp = parseInt(elements.batchHpMax?.value) || 0;
+            const minPower = parseInt(elements.batchPowerMin?.value) || 0;
+            const maxPower = parseInt(elements.batchPowerMax?.value) || 0;
+            const skillType = parseInt(elements.batchSkillType?.value) || 0;
+            const skillStar = parseInt(elements.batchSkillStar?.value) || 0;
+            
+            let baseId = parseInt(elements.npcId?.value) || 20055;
+            
+            const jsonStrings = [];
+            const availableSkills = Object.values(skillData).filter(skill => {
+                const typeMatch = skillType === 0 || skill.type === skillType;
+                const starMatch = skillStar === 0 || skill.star === skillStar;
+                return typeMatch && starMatch;
+            });
+
+            for (let i = 0; i < count; i++) {
+                const newId = baseId + i;
+                
+                const npc = {};
+                
+                npc.id = newId;
+                npc.intr = elements.intr?.value.trim() || "0";
+                npc.nick = elements.nick?.value.trim() || "npc";
+                
+                let randomSkill = 0;
+                if (availableSkills.length > 0) {
+                    const randomIndex = getRandomInt(0, availableSkills.length - 1);
+                    randomSkill = availableSkills[randomIndex].id;
+                }
+                npc.skill = randomSkill;
+                
+                npc.lv = parseInt(elements.lv?.value) || 0;
+                npc.hpXZ = parseFloat(elements.hpXZ?.value) || 0.0;
+                npc.powerXZ = parseFloat(elements.powerXZ?.value) || 0.0;
+                npc.speak = elements.speak?.value.trim() ? elements.speak.value.trim().split('\n').map(s => s.trim()) : ["0"];
+                npc.revival = parseInt(elements.revival?.value) || 0;
+                npc.npcPower = getRandomInt(minPower, maxPower);
+                npc.npcHp = getRandomInt(minHp, maxHp);
+                npc.sign = parseInt(elements.signSelect?.value) || 0;
+                npc.quality = parseInt(elements.qualitySelect?.value) || 4;
+                npc.as = parseInt(elements.asSelect?.value) || 0;
+                npc.sex = parseInt(elements.sexSelect?.value) || 0;
+                npc.head = parseInt(elements.headInput?.value) || 0;
+
+                let mianYunValue = 0;
+                const mianYunElement = document.querySelector('input[name="mianYun"]:checked');
+                if (mianYunElement && mianYunElement.value) {
+                    mianYunValue = parseInt(mianYunElement.value);
+                }
+                npc.mianYun = mianYunValue;
+                
+                npc.geDang = parseInt(elements.geDang?.value) || 0;
+                npc.shanBi = parseInt(elements.shanBi?.value) || 0;
+                npc.xingGe = parseInt(elements.xingGeSelect?.value) || 0;
+                
+                let soleValue = true;
+                const soleElement = document.querySelector('input[name="sole"]:checked');
+                if (soleElement && soleElement.value) {
+                    soleValue = soleElement.value === 'true';
+                }
+                npc.sole = soleValue;
+                
+                npc.group = parseInt(elements.group?.value) || 0;
+                npc.money = parseInt(elements.money?.value) || 0;
+                npc.exp = parseInt(elements.exp?.value) || 0;
+                npc.yueLi = parseInt(elements.yueLi?.value) || 0;
+                npc.daoDe = parseInt(elements.daoDe?.value) || 0;
+
+                const dropItems = [];
+                elements.dropContainer?.querySelectorAll('.dynamic-item').forEach(item => {
+                    const pidInput = item.querySelector('.drop-pid');
+                    const dropInput = item.querySelector('.drop-chance');
+                    const countInput = item.querySelector('.drop-count');
+
+                    if (!pidInput || !dropInput || !countInput) {
+                        return;
+                    }
+
+                    const pidValue = pidInput.value.trim();
+                    const dropValue = dropInput.value.trim();
+                    const countValue = countInput.value.trim();
+                    
+                    if (pidValue) {
+                        let pid = parseInt(pidValue);
+                        if (isNaN(pid)) {
+                            const dropEntry = Object.values(dropData).find(d => d.nick === pidValue);
+                            if (dropEntry) {
+                                pid = dropEntry.id;
+                            } else {
+                                return;
+                            }
+                        }
+
+                        const drop = parseInt(dropValue) || 0;
+                        const count = parseInt(countValue) || 1;
+                        
+                        if (pid) {
+                            dropItems.push({ pid, drop, count });
+                        }
+                    }
+                });
+                npc.drop = dropItems.length > 0 ? dropItems : [];
+                
+                const funs = [];
+                elements.funsContainer?.querySelectorAll('.dynamic-item').forEach(item => {
+                    const funInput = item.querySelector('.fun-name');
+                    if (!funInput) {
+                        return;
+                    }
+                    const funName = funInput.value.trim();
+                    if (funName) {
+                        funs.push(funName);
+                    }
+                });
+                npc.npc_funs = funs.length > 0 ? funs : ["0"];
+                
+                // 仅将单个 NPC 对象和其键名进行字符串化
+                const npcJsonString = JSON.stringify(npc, null, 2);
+                jsonStrings.push(`"${newId}": ${npcJsonString}`);
+            }
+
+            // 将所有字符串化后的片段用逗号和换行符连接起来，并确保末尾有一个逗号
+            elements.jsonOutput.value = jsonStrings.join(',\n\n') + ',';
+            console.log("批量 JSON 生成成功！");
+
+        } catch (error) {
+            console.error("批量 JSON 字符串化失败：", error);
+            elements.jsonOutput.value = `// 批量生成 JSON 时出错: ${error.message}\n请检查控制台获取更多详细信息。`;
+        }
+    }
+
+    function copyJson() {
+        const jsonText = elements.jsonOutput.value;
+        navigator.clipboard.writeText(jsonText).then(() => {
+            alert('JSON 片段已复制到剪贴板！');
+        }).catch(err => {
+            console.error('复制失败: ', err);
+            alert('复制失败，请手动复制。');
+        });
+    }
+</script>
+
+</body>
+</html>

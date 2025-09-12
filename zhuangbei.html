@@ -49,6 +49,9 @@
             min-width: 350px;
             display: flex;
             flex-direction: column;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
         }
         
         .right-panel-mobile {
@@ -169,7 +172,14 @@
             font-family: 'Courier New', Courier, monospace;
             white-space: pre-wrap;
             overflow-y: auto;
-            max-height: 70vh;
+            max-height: 100%;
+            box-sizing: border-box;
+        }
+        
+        #output-desktop-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         #copyBtn, #copyBtn-mobile {
@@ -193,7 +203,7 @@
         @media (max-width: 768px) {
             body {
                 padding: 0;
-                padding-bottom: 260px; /* 为固定面板留出空间 */
+                padding-bottom: 260px;
             }
 
             .main-container {
@@ -220,7 +230,7 @@
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                height: 260px; /* 固定高度 */
+                height: 260px;
                 border-radius: 0;
                 box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
                 border-top-left-radius: var(--border-radius);
@@ -416,7 +426,9 @@
     
     <div class="right-panel-desktop">
         <h2>JSON输出</h2>
-        <pre id="output"></pre>
+        <div id="output-desktop-wrapper">
+             <pre id="output"></pre>
+        </div>
         <button id="copyBtn" onclick="copyJson()">一键复制</button>
     </div>
 </div>
@@ -561,8 +573,7 @@
         const outputElement = window.innerWidth <= 768 ? document.getElementById('output-mobile') : document.getElementById('output');
         const outputText = outputElement.textContent;
         try {
-            const textToCopy = outputText.endsWith(',') ? outputText.slice(0, -1) : outputText;
-            await navigator.clipboard.writeText(textToCopy);
+            await navigator.clipboard.writeText(outputText);
             const copyBtn = window.innerWidth <= 768 ? document.getElementById('copyBtn-mobile') : document.getElementById('copyBtn');
             copyBtn.textContent = '已复制!';
             setTimeout(() => {
@@ -574,8 +585,35 @@
         }
     }
 
+    // 修复手机端滚动穿透问题
+    function handleScrollThrough(event) {
+        const outputMobile = document.getElementById('output-mobile');
+        const scrollTop = outputMobile.scrollTop;
+        const scrollHeight = outputMobile.scrollHeight;
+        const clientHeight = outputMobile.clientHeight;
+
+        const isAtTop = scrollTop === 0;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+        
+        const deltaY = event.deltaY || (event.touches[0].clientY - (outputMobile.lastY || 0));
+        outputMobile.lastY = event.touches[0].clientY;
+
+        if ((isAtTop && deltaY > 0) || (isAtBottom && deltaY < 0)) {
+            event.preventDefault();
+        }
+    }
+
+    function attachScrollListener() {
+        const outputMobile = document.getElementById('output-mobile');
+        if (outputMobile) {
+            outputMobile.addEventListener('wheel', handleScrollThrough, { passive: false });
+            outputMobile.addEventListener('touchmove', handleScrollThrough, { passive: false });
+        }
+    }
+
     window.onload = () => {
         updateJson();
+        attachScrollListener();
     };
 </script>
 

@@ -212,6 +212,9 @@
                 align-self: stretch; /* 按钮拉伸至与面板同宽 */
             }
         }
+        .required-missing {
+            border-color: red !important;
+        }
     </style>
 </head>
 <body>
@@ -318,7 +321,7 @@
                     <input type="text" id="effDesp1" placeholder="发动陷阱卡一次mine够，无法招架闪避" oninput="generateJson()">
                 </div>
                 <div class="form-group">
-                    <label for="effName2">效果2名称</label>
+                    <label for="effName2">效果2名称 <span class="required-label">(应用于buff)</span></label>
                     <input type="text" id="effName2" placeholder="母鸡卡卡池帮朋友抽了大保底" oninput="generateJson()">
                 </div>
                 <div class="form-group">
@@ -639,8 +642,50 @@
 
             const preSkill = preSkillInput ? preSkillInput.split(',').map(s => parseInt(s.trim())).filter(s => !isNaN(s)) : [];
 
+            // 检查必填字段
+            let requiredFieldsMissing = false;
+            // 重置所有必填输入框的样式
+            document.getElementById('effName2').classList.remove('required-missing');
+            document.getElementById('effDesp2').classList.remove('required-missing');
+            document.getElementById('effName4').classList.remove('required-missing');
+            document.getElementById('effDesp4').classList.remove('required-missing');
+            document.getElementById('effName3').classList.remove('required-missing');
+            document.getElementById('effDesp3').classList.remove('required-missing');
+
+
+            if (document.getElementById('addBuff').checked) {
+                if (!effName2 || !effDesp2) {
+                    requiredFieldsMissing = true;
+                    if (!effName2) document.getElementById('effName2').classList.add('required-missing');
+                    if (!effDesp2) document.getElementById('effDesp2').classList.add('required-missing');
+                }
+            }
+
+            if (document.getElementById('addLevelEffect').checked) {
+                if (!effName4 || !effDesp4) {
+                    requiredFieldsMissing = true;
+                    if (!effName4) document.getElementById('effName4').classList.add('required-missing');
+                    if (!effDesp4) document.getElementById('effDesp4').classList.add('required-missing');
+                }
+            }
+
+            if (document.getElementById('addAdMode').checked) {
+                if (!effName3 || !effDesp3) {
+                    requiredFieldsMissing = true;
+                    if (!effName3) document.getElementById('effName3').classList.add('required-missing');
+                    if (!effDesp3) document.getElementById('effDesp3').classList.add('required-missing');
+                }
+            }
+
+
             // 按照用户提供的范例顺序构建 JSON 对象
             let data = {};
+            
+            // 如果有必填项未填写，在JSON中添加提示
+            if (requiredFieldsMissing) {
+                data["_comment"] = "警告：请填写所有勾选选项对应的效果描述字段！";
+            }
+            
             data.type = parseInt(type);
             data.power = parseInt(power);
             data.speed = parseInt(speed);
@@ -760,6 +805,22 @@
 
         function copyJson() {
             const jsonText = document.getElementById('jsonOutput').textContent;
+            
+            // 检查是否有必填项未填写
+            const effName2 = document.getElementById('effName2');
+            const effDesp2 = document.getElementById('effDesp2');
+            const effName4 = document.getElementById('effName4');
+            const effDesp4 = document.getElementById('effDesp4');
+            const effName3 = document.getElementById('effName3');
+            const effDesp3 = document.getElementById('effDesp3');
+            
+            if ((document.getElementById('addBuff').checked && (!effName2.value || !effDesp2.value)) ||
+                (document.getElementById('addLevelEffect').checked && (!effName4.value || !effDesp4.value)) ||
+                (document.getElementById('addAdMode').checked && (!effName3.value || !effDesp3.value))) {
+                alert('请填写所有勾选选项对应的效果名称和描述！');
+                return;
+            }
+
             navigator.clipboard.writeText(jsonText).then(() => {
                 const copyBtn = document.getElementById('copyBtn');
                 copyBtn.textContent = '已复制!';
