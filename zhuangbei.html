@@ -269,6 +269,20 @@
             </div>
 
             <div class="form-group">
+                <label for="type">装备类型 (type)</label>
+                <select id="type" onchange="updateJson()" autocomplete="off">
+                    <option value="" disabled selected>选择装备类型...</option>
+                    <option value="1">拳 (1)</option>
+                    <option value="2">剑 (2)</option>
+                    <option value="3">刀 (3)</option>
+                    <option value="4">棍 (4)</option>
+                    <option value="5">衣服 (5)</option>
+                    <option value="6">戒指 (6)</option>
+                    <option value="7">护腕 (7)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
                 <label>主属性 (e1)</label>
                 <div class="form-group">
                     <label for="e1Type">类型 (t)</label>
@@ -344,7 +358,7 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <div id="traitSection" class="form-group">
                 <label>可铸造特性 (tx)</label>
                 <div id="traits" class="trait-container">
                 </div>
@@ -401,20 +415,6 @@
             <div class="form-group">
                 <label for="desp">装备描述 (desp)</label>
                 <input type="text" id="desp" placeholder="请输入装备描述" oninput="updateJson()" autocomplete="off">
-            </div>
-
-            <div class="form-group">
-                <label for="type">装备类型 (type)</label>
-                <select id="type" onchange="updateJson()" autocomplete="off">
-                    <option value="" disabled selected>选择装备类型...</option>
-                    <option value="1">拳 (1)</option>
-                    <option value="2">剑 (2)</option>
-                    <option value="3">刀 (3)</option>
-                    <option value="4">棍 (4)</option>
-                    <option value="5">衣服 (5)</option>
-                    <option value="6">戒指 (6)</option>
-                    <option value="7">护腕 (7)</option>
-                </select>
             </div>
             
             <div class="form-group">
@@ -483,6 +483,7 @@
 
     function updateJson() {
         const itemId = document.getElementById('itemId').value || '装备ID';
+        const type = document.getElementById('type').value; 
         const e1Type = document.getElementById('e1Type').value;
         const e1Value = document.getElementById('e1Value').value;
         const e2Type = document.getElementById('e2Type').value;
@@ -506,34 +507,50 @@
         
         const desp = document.getElementById('desp').value || '装备描述';
         const combinedDesp = qualityPrefix + desp;
-
-        const type = document.getElementById('type').value;
         const money = document.getElementById('money').value || '装备售价';
 
-        const traits = [];
-        const traitItems = document.querySelectorAll('#traits .trait-item');
-        traitItems.forEach(item => {
-            const t = item.querySelector('.trait-type').value;
-            const v = item.querySelector('.trait-value').value;
-            if (t && v) {
-                traits.push({ t: parseInt(t), v: parseInt(v), r: 0 });
-            }
-        });
+        // 检查装备类型，决定是否显示 tx
+        const isTxVisible = type !== '5' && type !== '6' && type !== '7'; 
+        const traitSection = document.getElementById('traitSection');
+        if (isTxVisible) {
+            traitSection.style.display = 'block';
+        } else {
+            traitSection.style.display = 'none';
+        }
 
-        const data = {
+        const traits = [];
+        if (isTxVisible) { // 只有在需要显示 tx 时才收集数据
+            const traitItems = document.querySelectorAll('#traits .trait-item');
+            traitItems.forEach(item => {
+                const t = item.querySelector('.trait-type').value;
+                const v = item.querySelector('.trait-value').value;
+                if (t && v) {
+                    traits.push({ t: parseInt(t), v: parseInt(v), r: 0 });
+                }
+            });
+        }
+        
+        // 重新构建 JSON 对象，确保 tx 字段的位置
+        let data = {
             e1: { t: e1Type ? parseInt(e1Type) : 0, v: e1Value ? parseInt(e1Value) : 0, r: 0 },
             e2: { t: e2Type ? parseInt(e2Type) : 0, v: e2Value ? parseInt(e2Value) : 0, r: 0 },
             star: star ? parseInt(star) : 0,
-            noQh: parseInt(noQh),
-            tx: traits,
-            id: itemId ? parseInt(itemId) : 0,
-            icon: icon ? parseInt(icon) : 0,
-            nick: nick,
-            desp: combinedDesp,
-            type: type ? parseInt(type) : 0,
-            kungfu: 0,
-            money: money ? parseInt(money) : 0
+            noQh: parseInt(noQh)
         };
+        
+        // 如果需要显示 tx，就把它添加到数据对象中
+        if (isTxVisible) {
+            data.tx = traits;
+        }
+
+        // 添加剩余的字段
+        data.id = itemId ? parseInt(itemId) : 0;
+        data.icon = icon ? parseInt(icon) : 0;
+        data.nick = nick;
+        data.desp = combinedDesp;
+        data.type = type ? parseInt(type) : 0;
+        data.kungfu = 0;
+        data.money = money ? parseInt(money) : 0;
 
         const jsonString = JSON.stringify(data, null, 4);
         const outputText = `"${itemId}": ${jsonString},`;
