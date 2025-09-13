@@ -226,24 +226,24 @@
                 <h3>基本信息</h3>
                 <div class="form-group">
                     <label for="id">武学ID <span class="tooltip">(自动同步到ID和Mate)<span class="tooltiptext">此ID将作为JSON的顶级键名，并自动填充"id"和"mate"字段。</span></span></label>
-                    <input type="number" id="id" value="3065" oninput="generateJson()">
+                    <input type="number" id="id" oninput="generateJson()">
                 </div>
                 <div class="form-group">
                     <label>武学类型</label>
                     <div class="radio-group" onchange="generateJson()">
                         <div><input type="radio" name="type" value="1" id="type1"><label for="type1">1 (拳法)</label></div>
-                        <div><input type="radio" name="type" value="2" id="type2" checked><label for="type2">2 (剑法)</label></div>
+                        <div><input type="radio" name="type" value="2" id="type2"><label for="type2">2 (剑法)</label></div>
                         <div><input type="radio" name="type" value="3" id="type3"><label for="type3">3 (刀法)</label></div>
                         <div><input type="radio" name="type" value="4" id="type4"><label for="type4">4 (棍法)</label></div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="power">威力 (power)</label>
-                    <input type="number" id="power" value="1250" oninput="generateJson()">
+                    <input type="number" id="power" value="0" oninput="generateJson()">
                 </div>
                 <div class="form-group">
                     <label for="speed">速度 (speed)</label>
-                    <input type="number" id="speed" value="150" oninput="generateJson()">
+                    <input type="number" id="speed" value="0" oninput="generateJson()">
                 </div>
                 <div class="form-group">
                     <label for="mode">攻击方式 (mode)</label>
@@ -261,12 +261,12 @@
                         <option value="0">0 (可闪避格挡)</option>
                         <option value="1">1 (不可格挡)</option>
                         <option value="2">2 (不可闪避)</option>
-                        <option value="3" selected>3 (不可闪避格挡)</option>
+                        <option value="3">3 (不可闪避格挡)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="yueLi">阅历比例 (yueLi)</label>
-                    <input type="number" id="yueLi" step="0.1" value="96.0" oninput="generateJson()">
+                    <input type="number" id="yueLi" step="1.0" value="0.0" oninput="generateJson()">
                 </div>
                 <div class="form-group">
                     <label for="star">品级 (star)</label>
@@ -277,16 +277,16 @@
                         <option value="3">3 (C)</option>
                         <option value="4">4 (B)</option>
                         <option value="5">5 (A)</option>
-                        <option value="6" selected>6 (S)</option>
+                        <option value="6">6 (S)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="baoji">暴击几率 (baoji)</label>
-                    <input type="number" id="baoji" step="0.1" value="5.0" oninput="generateJson()">
+                    <input type="number" id="baoji" step="0.1" value="0.0" oninput="generateJson()">
                 </div>
                 <div class="form-group">
                     <label for="baojiEffect">爆伤数值 (baojiEffect)</label>
-                    <input type="number" id="baojiEffect" step="0.1" value="2.0" oninput="generateJson()">
+                    <input type="number" id="baojiEffect" step="0.1" value="0.0" oninput="generateJson()">
                 </div>
             </div>
 
@@ -358,6 +358,7 @@
                             <option value="0">0 (无)</option>
                             <option value="2">2 (血)</option>
                             <option value="8">8 (速)</option>
+                            <option value="10">10 (血速)</option>
                             <option value="131072">131072 (攻)</option>
                             <option value="131074">131074 (攻血)</option>
                             <option value="131080">131080 (攻速)</option>
@@ -382,27 +383,27 @@
                     </div>
                     <div class="form-group">
                         <label for="jiLv">几率 (jiLv)</label>
-                        <input type="number" id="jiLv" value="14" oninput="generateJson()">
+                        <input type="number" id="jiLv" value="0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="hp">流血数值 (hp)</label>
-                        <input type="number" id="hp" value="0" oninput="generateJson()">
+                        <input type="number" id="hp" value="-0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="powerBuff">减攻数值 (powerBuff)</label>
-                        <input type="number" id="powerBuff" value="0" oninput="generateJson()">
+                        <input type="number" id="powerBuff" value="-0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="speedBuff">减速数值 (speedBuff)</label>
-                        <input type="number" id="speedBuff" value="0" oninput="generateJson()">
+                        <input type="number" id="speedBuff" value="-0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="round">持续回合数 (round)</label>
-                        <input type="number" id="round" value="1" oninput="generateJson()">
+                        <input type="number" id="round" value="0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="buffLevel">生效重数 (buffLevel)</label>
-                        <input type="number" id="buffLevel" value="4" oninput="generateJson()">
+                        <input type="number" id="buffLevel" value="0" oninput="generateJson()">
                     </div>
                 </div>
             </div>
@@ -434,7 +435,7 @@
                         <select id="levelEffectT" onchange="generateJson()">
                             <option value="1">1 (绝对血量)</option>
                             <option value="2">2 (血量)</option>
-                            <option value="4" selected>4 (速度)</option>
+                            <option value="4">4 (速度)</option>
                             <option value="16">16 (闪避)</option>
                             <option value="64">64 (格挡)</option>
                             <option value="512">512 (拳脚威力)</option>
@@ -455,7 +456,7 @@
                     </div>
                     <div class="form-group">
                         <label for="levelEffectV">具体数值 (v)</label>
-                        <input type="number" id="levelEffectV" value="18" oninput="generateJson()">
+                        <input type="number" id="levelEffectV" value="0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="levelEffectR">回合数 (r)</label>
@@ -463,7 +464,7 @@
                     </div>
                     <div class="form-group">
                         <label for="levelEffectLev">生效重数 (levelEffectLev)</label>
-                        <input type="number" id="levelEffectLev" value="8" oninput="generateJson()">
+                        <input type="number" id="levelEffectLev" value="0" oninput="generateJson()">
                     </div>
                 </div>
             </div>
@@ -478,7 +479,7 @@
                         <label for="adMode">攻击方式 (adMode)</label>
                         <select id="adMode" onchange="generateJson()">
                             <option value="21">21 (随机一个敌人)</option>
-                            <option value="22" selected>22 (随机两个敌人)</option>
+                            <option value="22">22 (随机两个敌人)</option>
                             <option value="23">23 (随机三个敌人)</option>
                             <option value="24">24 (相邻两个敌人)</option>
                             <option value="25">25 (相邻三个敌人)</option>
@@ -503,7 +504,7 @@
                 <div id="goodEquipGroup" style="display: none;">
                     <div class="form-group">
                         <label for="goodEquip">适配武器ID (goodEquip)</label>
-                        <input type="number" id="goodEquip" value="5853" oninput="generateJson()">
+                        <input type="number" id="goodEquip" value="0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="goodEquipEffT">属性类型 (t)</label>
@@ -523,7 +524,7 @@
                             <option value="8388608">8388608 (回血)</option>
                             <option value="16777216">16777216 (爆伤)</option>
                             <option value="33554432">33554432 (反伤)</option>
-                            <option value="134217728" selected>134217728 (暴击)</option>
+                            <option value="134217728">134217728 (暴击)</option>
                             <option value="134217734">134217734 (武器万分比)</option>
                             <option value="134217735">134217735 (基础伤害万分比)</option>
                             <option value="134217736">134217736 (武功万分比)</option>
@@ -531,7 +532,7 @@
                     </div>
                     <div class="form-group">
                         <label for="goodEquipEffV">具体数值 (v)</label>
-                        <input type="number" id="goodEquipEffV" value="12" oninput="generateJson()">
+                        <input type="number" id="goodEquipEffV" value="0" oninput="generateJson()">
                     </div>
                     <div class="form-group">
                         <label for="goodEquipEffR">回合数 (r)</label>
