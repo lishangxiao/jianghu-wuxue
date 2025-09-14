@@ -102,31 +102,61 @@
             border-color: var(--accent-color);
             outline: none;
         }
+        
+        /* New styles for search dropdowns */
+        .search-container {
+            position: relative;
+        }
 
-        .add-levelmate-btn, .remove-levelmate-btn {
+        .search-results {
+            position: absolute;
+            z-index: 10;
+            background-color: white;
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 22px);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-results li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-results li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .add-levelmate-btn, .remove-levelmate-btn, .add-goodskill-btn, .remove-goodskill-btn {
             padding: 5px 10px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: 600;
             font-size: 12px;
+            margin-right: 5px;
         }
 
-        .add-levelmate-btn {
+        .add-levelmate-btn, .add-goodskill-btn {
             background-color: var(--accent-color);
             color: white;
         }
 
-        .add-levelmate-btn:hover {
+        .add-levelmate-btn:hover, .add-goodskill-btn:hover {
             background-color: var(--hover-color);
         }
 
-        .remove-levelmate-btn {
+        .remove-levelmate-btn, .remove-goodskill-btn {
             background-color: #e74c3c;
             color: white;
         }
 
-        .remove-levelmate-btn:hover {
+        .remove-levelmate-btn:hover, .remove-goodskill-btn:hover {
             background-color: #c0392b;
         }
 
@@ -166,18 +196,44 @@
             font-size: 1.1em;
         }
 
-        .eff-item, .levelmate-item {
+        .eff-item, .levelmate-item, .goodskill-item {
             border: 1px dashed #bdc3c7;
             padding: 10px;
             border-radius: 4px;
             margin-bottom: 10px;
             background-color: #ecf0f1;
         }
-
-        .eff-item h4 {
+        
+        .eff-item h4, .goodskill-item h4 {
             margin-top: 0;
             border-bottom: 1px solid #ccc;
             padding-bottom: 5px;
+        }
+        
+        #total-gains-container {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            margin-top: 15px;
+            border: 1px dashed #bdc3c7;
+        }
+        
+        #total-gains-container h3 {
+            margin-top: 0;
+            color: #34495e;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        
+        #total-gains-container ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #total-gains-container li {
+            padding: 5px 0;
         }
 
         /* Mobile Layout */
@@ -242,19 +298,19 @@
         <h2>内功配置</h2>
         <div class="form-group">
             <label for="id">内功ID</label>
-            <input type="number" id="id" placeholder="凉乞钞长期素食导致小猫愿意成为男娘" min="0" autocomplete="off">
+            <input type="number" id="id" placeholder="例如: 3860" min="0" autocomplete="off">
         </div>
         <div class="form-group">
             <label for="nick">内功名称</label>
-            <input type="text" id="nick" placeholder="我坚信神是会鹿管的" autocomplete="off">
+            <input type="text" id="nick" placeholder="例如: 凉乞钞长期素食导致小猫愿意成为猫娘" autocomplete="off">
         </div>
         <div class="form-group">
             <label for="desp">内功描述</label>
-            <textarea id="desp" rows="3" placeholder="不然为什么世界上那么多神精" autocomplete="off"></textarea>
+            <textarea id="desp" rows="3" placeholder="例如: 你这样快速运作的机器进入冲国..." autocomplete="off"></textarea>
         </div>
         <div class="form-group">
             <label for="icon">图标ID</label>
-            <input type="number" id="icon" placeholder="例如: 3001" min="0" autocomplete="off">
+            <input type="number" id="icon" placeholder="例如: 3003" min="0" autocomplete="off">
         </div>
         <div class="form-group">
             <label for="star">品级</label>
@@ -270,7 +326,7 @@
         </div>
         <div class="form-group">
             <label for="xiuWei">修为比例</label>
-            <input type="number" id="xiuWei" placeholder="C一般为2到3左右，B为3到4左右，A为5到6左右，s为10到16左右" step="0.1" autocomplete="off">
+            <input type="number" id="xiuWei" placeholder="C一般为2到3之间，B一般为3到4之间，A一般为5到6之间，S为10到16左右" step="0.1" autocomplete="off">
         </div>
         <div class="form-group">
             <label for="preSkill">前置内功 (用逗号分隔ID)</label>
@@ -279,23 +335,37 @@
 
         <div class="section-header">升级效果 (eff) - 共9重</div>
         <div id="eff-container">
-            </div>
+        </div>
 
         <div class="section-header">升级前置 (levelMate)</div>
         <div id="levelmate-container">
-            </div>
+        </div>
         <button class="add-levelmate-btn" onclick="addLevelMate()">添加升级前置</button>
+
+        <div class="section-header">适配武功增益 (goodSkills)</div>
+        <div id="goodskill-container">
+        </div>
+        <button class="add-goodskill-btn" onclick="addGoodSkill()">添加武功增益</button>
     </div>
 
     <div class="output-area-desktop">
         <h2>JSON 片段输出</h2>
         <pre id="output-desktop"></pre>
         <button id="copyBtn-desktop" class="copy-btn" onclick="copyJson()">一键复制</button>
+        <hr>
+        <div id="total-gains-container">
+            <h3>九重总增益</h3>
+            <ul id="total-gains-list"></ul>
+        </div>
     </div>
 
     <div class="output-area-mobile">
         <pre id="output-mobile"></pre>
         <button id="copyBtn-mobile" class="copy-btn" onclick="copyJson()">一键复制</button>
+        <div id="total-gains-container-mobile">
+            <h3>九重总增益</h3>
+            <ul id="total-gains-list-mobile"></ul>
+        </div>
     </div>
 </div>
 
@@ -306,39 +376,108 @@
         '绝对攻击': 65536, '攻击': 131072, '免伤': 524288, '吸血': 2097152,
         '回血': 8388608, '爆伤': 16777216, '反伤': 33554432, '暴击': 134217728,
         '武器万分比': 134217734, '基础伤害万分比': 134217735,
-        '武功万分比': 134217736
+        '武功万分比': 134217736,
+        '免晕': 134217729, '免流': 134217730, '免速': 134217732, '复活': 134217733
+    };
+
+    const typeReverseMap = Object.fromEntries(Object.entries(typeMap).map(([key, value]) => [value, key]));
+
+    const despMap = {
+        '1': '绝对血量增加%d', '2': '血量增加%d%', '4': '速度增加%d', '16': '闪避增加%d%', '64': '格挡增加%d%',
+        '512': '拳脚威力增加%d%', '2048': '刀法威力增加%d%', '8192': '剑法威力增加%d%',
+        '65536': '绝对攻击增加%d', '131072': '攻击增加%d%', '524288': '免伤增加%d%', '2097152': '吸血增加%d%',
+        '8388608': '回血增加%d%', '16777216': '爆伤增加%d%', '33554432': '反伤增加%d%', '134217728': '暴击增加%d%',
+        '134217734': '武器万分比增加%d', '134217735': '基础伤害万分比增加%d',
+        '134217736': '武功万分比增加%d',
+        '134217729': '免疫眩晕状态，概率%d%', '134217730': '免疫流血状态，概率%d%', '134217732': '免疫减速状态，概率%d%',
+        '134217733': '战斗力竭之后%r回合复活，回复%d%的血量',
     };
 
     const typeOptions = Object.keys(typeMap).map(key => `<option value="${typeMap[key]}">${key} (${typeMap[key]})</option>`).join('');
 
     const effContainer = document.getElementById('eff-container');
     const levelMateContainer = document.getElementById('levelmate-container');
+    const goodSkillContainer = document.getElementById('goodskill-container');
     const outputDesktopElem = document.getElementById('output-desktop');
     const outputMobileElem = document.getElementById('output-mobile');
     const copyBtnDesktop = document.getElementById('copyBtn-desktop');
     const copyBtnMobile = document.getElementById('copyBtn-mobile');
-    const mobileOutputArea = document.querySelector('.output-area-mobile');
+    
+    const totalGainsListDesktop = document.getElementById('total-gains-list');
+    const totalGainsListMobile = document.getElementById('total-gains-list-mobile');
+
+    let propData = {};
+    let skillData = {};
+
+    function generateDesp(t, v, r) {
+        let autoDesp = despMap[t] || '';
+        
+        // Handle empty value for initial state
+        if (!v) {
+            return ``; // 修改：不输入值时不自动生成描述
+        }
+        
+        if (t == 134217733) {
+            autoDesp = autoDesp.replace('%d', v).replace('%r', r);
+        } else if (v < 0) {
+            autoDesp = autoDesp.replace('增加', '减少');
+            autoDesp = autoDesp.replace('%d', Math.abs(v));
+        } else {
+            autoDesp = autoDesp.replace('%d', v);
+        }
+
+        return autoDesp;
+    }
 
     function createEffItem(index) {
         const item = document.createElement('div');
         item.className = 'eff-item';
+        
+        let initialT = 1; 
+        let initialV = '';
+        let initialR = 0;
+
         item.innerHTML = `
             <h4>第 ${index + 1} 重</h4>
             <div class="form-group">
                 <label>效果名称 (nick)</label>
-                <input type="text" class="eff-nick" placeholder="例如: 武学至理" autocomplete="off">
+                <input type="text" class="eff-nick" placeholder="后续t值相同但名称为空将被自动填充一样的nick" autocomplete="off">
             </div>
             <div class="form-group">
                 <label>效果描述 (desp)</label>
-                <input type="text" class="eff-desp" placeholder="例如: 增强各类武功%d%%威力" autocomplete="off">
+                <input type="text" class="eff-desp" placeholder="当tvr三个值都完整且描述为空时将自动生成描述" autocomplete="off">
             </div>
             <div class="form-group">
                 <label>属性类型 (t)</label>
-                <select class="eff-t" autocomplete="off">${typeOptions}</select>
+                <select class="eff-t" autocomplete="off">
+                    <option value="1" selected>绝对血量 (1)</option>
+                    <option value="2">血量 (2)</option>
+                    <option value="4">速度 (4)</option>
+                    <option value="16">闪避 (16)</option>
+                    <option value="64">格挡 (64)</option>
+                    <option value="512">拳脚威力 (512)</option>
+                    <option value="2048">刀法威力 (2048)</option>
+                    <option value="8192">剑法真意 (8192)</option>
+                    <option value="65536">绝对攻击 (65536)</option>
+                    <option value="131072">攻击 (131072)</option>
+                    <option value="524288">免伤 (524288)</option>
+                    <option value="2097152">吸血 (2097152)</option>
+                    <option value="8388608">回血 (8388608)</option>
+                    <option value="16777216">爆伤 (16777216)</option>
+                    <option value="33554432">反伤 (33554432)</option>
+                    <option value="134217728">暴击 (134217728)</option>
+                    <option value="134217734">武器万分比 (134217734)</option>
+                    <option value="134217735">基础伤害万分比 (134217735)</option>
+                    <option value="134217736">武功万分比 (134217736)</option>
+                    <option value="134217729">免晕 (134217729)</option>
+                    <option value="134217730">免流 (134217730)</option>
+                    <option value="134217732">免速 (134217732)</option>
+                    <option value="134217733">复活 (134217733)</option>
+                </select>
             </div>
             <div class="form-group">
                 <label>具体数值 (v)</label>
-                <input type="number" class="eff-v" placeholder="例如: 10" autocomplete="off">
+                <input type="number" class="eff-v" placeholder="请输入具体数值，例如：1000" value="${initialV}" autocomplete="off">
             </div>
             <div class="form-group">
                 <label>回合数 (r)</label>
@@ -358,7 +497,10 @@
             </div>
             <div class="form-group">
                 <label>前置物品ID</label>
-                <input type="number" class="levelmate-id" placeholder="例如: 7036" autocomplete="off">
+                <div class="search-container">
+                    <input type="text" class="levelmate-id-search" placeholder="输入ID或名称搜索..." autocomplete="off">
+                    <ul class="search-results" style="display: none;"></ul>
+                </div>
             </div>
             <div class="form-group">
                 <label>需求数量</label>
@@ -370,7 +512,10 @@
     }
 
     function addLevelMate() {
-        levelMateContainer.appendChild(createLevelMateItem());
+        const newItem = createLevelMateItem();
+        levelMateContainer.appendChild(newItem);
+        addSearchListeners(newItem);
+        addInputListeners(newItem);
         updateJSON();
     }
 
@@ -378,34 +523,191 @@
         btn.parentElement.remove();
         updateJSON();
     }
+    
+    function createGoodSkillItem() {
+        const item = document.createElement('div');
+        item.className = 'goodskill-item';
+        item.innerHTML = `
+            <div class="form-group">
+                <label>武功ID</label>
+                <div class="search-container">
+                    <input type="text" class="goodskill-id-search" placeholder="输入ID或名称搜索..." autocomplete="off">
+                    <ul class="search-results" style="display: none;"></ul>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>增益属性类型 (t)</label>
+                <select class="goodskill-t" autocomplete="off">${typeOptions}</select>
+            </div>
+            <div class="form-group">
+                <label>增益数值 (v)</label>
+                <input type="number" class="goodskill-v" placeholder="例如: 20" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>增益回合数 (r)</label>
+                <input type="number" class="goodskill-r" value="0" placeholder="默认: 0" autocomplete="off">
+            </div>
+            <button class="remove-goodskill-btn" onclick="removeGoodSkill(this)">删除</button>
+        `;
+        return item;
+    }
+
+    function addGoodSkill() {
+        const newItem = createGoodSkillItem();
+        goodSkillContainer.appendChild(newItem);
+        addSearchListeners(newItem);
+        addInputListeners(newItem);
+        updateJSON();
+    }
+
+    function removeGoodSkill(btn) {
+        btn.parentElement.remove();
+        updateJSON();
+    }
+    
+    function addSearchListeners(container = document) {
+        container.querySelectorAll('.levelmate-id-search').forEach(input => {
+            input.addEventListener('input', (e) => handleSearch(e, propData));
+            input.addEventListener('focus', (e) => handleSearch(e, propData));
+        });
+        container.querySelectorAll('.goodskill-id-search').forEach(input => {
+            input.addEventListener('input', (e) => handleSearch(e, skillData));
+            input.addEventListener('focus', (e) => handleSearch(e, skillData));
+        });
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('.search-results').forEach(ul => {
+                if (!ul.parentElement.contains(e.target)) {
+                    ul.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    function addInputListeners(container = document) {
+        // Listen for input on most elements for real-time JSON update
+        container.querySelectorAll('input, select, textarea').forEach(elem => {
+            elem.addEventListener('input', (event) => {
+                // The 'eff-nick' and 'eff-desp' inputs are handled below,
+                // so we skip them here to avoid redundant calls.
+                if (!event.target.classList.contains('eff-nick') && !event.target.classList.contains('eff-desp')) {
+                    updateJSON();
+                }
+            });
+            elem.addEventListener('change', updateJSON);
+        });
+        
+        // eff-t, eff-v, eff-r changes should trigger desp autofill
+        container.querySelectorAll('.eff-t, .eff-v, .eff-r').forEach(elem => {
+            elem.addEventListener('input', (event) => {
+                autofillDesp(event.target.closest('.eff-item'));
+                updateJSON();
+            });
+        });
+
+        // The eff-nick input now only listens for the 'change' event to trigger autofill
+        container.querySelectorAll('.eff-nick').forEach(input => {
+            input.addEventListener('change', autofillNicks);
+        });
+        
+        // Listen for user input on eff-desp to prevent autofill on manual change
+        // This is the core change for requirement #2
+        container.querySelectorAll('.eff-desp').forEach(input => {
+            input.addEventListener('input', () => {
+                input.dataset.manuallyEdited = 'true';
+            });
+        });
+    }
+
+    function autofillDesp(item) {
+        const effT = item.querySelector('.eff-t').value;
+        const effV = item.querySelector('.eff-v').value;
+        const effR = item.querySelector('.eff-r').value;
+        const effDespInput = item.querySelector('.eff-desp');
+        
+        // 核心修改：仅在用户未手动输入过描述时才自动填充
+        if (!effDespInput.dataset.manuallyEdited) {
+            const autoDesp = generateDesp(effT, effV, effR);
+            effDespInput.value = autoDesp;
+        }
+    }
+
+    function autofillNicks(event) {
+        const currentInput = event.target;
+        const currentItem = currentInput.closest('.eff-item');
+        const currentType = currentItem.querySelector('.eff-t').value;
+        const currentNickValue = currentInput.value.trim();
+
+        if (currentNickValue) {
+            const effItems = effContainer.querySelectorAll('.eff-item');
+            effItems.forEach(item => {
+                const nickInput = item.querySelector('.eff-nick');
+                const typeSelect = item.querySelector('.eff-t');
+                
+                // Only fill if the type matches and the input is empty
+                if (typeSelect.value === currentType && nickInput.value.trim() === '') {
+                    nickInput.value = currentNickValue;
+                }
+            });
+        }
+        updateJSON();
+    }
+
+
+    function handleSearch(event, data) {
+        const query = event.target.value.toLowerCase();
+        const resultsList = event.target.nextElementSibling;
+        resultsList.innerHTML = '';
+        
+        let filtered = [];
+        const dataEntries = Object.entries(data);
+
+        if (query) {
+            filtered = dataEntries.filter(([id, item]) => {
+                return String(id).includes(query) || (item.nick && item.nick.toLowerCase().includes(query));
+            });
+        } else {
+            // Show all options if query is empty
+            filtered = dataEntries;
+        }
+        
+        // Limit to first 100 results for performance
+        const limitedResults = filtered.slice(0, 100);
+
+        if (limitedResults.length > 0) {
+            limitedResults.forEach(([id, item]) => {
+                const li = document.createElement('li');
+                li.textContent = `${item.nick} (${id})`;
+                li.addEventListener('click', () => {
+                    event.target.value = id; // Set input value to the ID
+                    resultsList.style.display = 'none';
+                    updateJSON();
+                });
+                resultsList.appendChild(li);
+            });
+            resultsList.style.display = 'block';
+        } else {
+            resultsList.style.display = 'none';
+        }
+    }
 
     function collectFormData() {
+        const config = {};
         const id = document.getElementById('id').value;
-        const nick = document.getElementById('nick').value;
-        const desp = document.getElementById('desp').value;
-        const icon = document.getElementById('icon').value;
-        const star = document.getElementById('star').value;
-        const xiuWei = document.getElementById('xiuWei').value;
-        const preSkillStr = document.getElementById('preSkill').value;
 
-        const data = {};
-
-        if (!id) return null;
-        data[id] = {};
-        const config = data[id];
-
+        // 1. eff
         config.eff = [];
         const effItems = effContainer.querySelectorAll('.eff-item');
         effItems.forEach(item => {
             const eff = {};
-            const effNick = item.querySelector('.eff-nick').value;
-            const effDesp = item.querySelector('.eff-desp').value;
+            const effNickInput = item.querySelector('.eff-nick');
+            const effDespInput = item.querySelector('.eff-desp');
             const effT = item.querySelector('.eff-t').value;
             const effV = item.querySelector('.eff-v').value;
             const effR = item.querySelector('.eff-r').value;
 
-            if (effNick) eff.nick = effNick;
-            if (effDesp) eff.desp = effDesp;
+            eff.nick = effNickInput.value;
+            eff.desp = effDespInput.value;
+            
             if (effT) eff.t = parseInt(effT) || 0;
             if (effV) eff.v = parseInt(effV) || 0;
             if (effR) eff.r = parseInt(effR) || 0;
@@ -413,67 +715,182 @@
             config.eff.push(eff);
         });
 
+        // 2. xiuWei
+        const xiuWei = document.getElementById('xiuWei').value;
         if (xiuWei) config.xiuWei = parseFloat(xiuWei) || 0;
-        config.id = parseInt(id) || 0;
+
+        // 3. goodSkills
+        const goodSkillItems = goodSkillContainer.querySelectorAll('.goodskill-item');
+        if (goodSkillItems.length > 0) {
+            config.goodSkills = {};
+            goodSkillItems.forEach(item => {
+                const skillId = item.querySelector('.goodskill-id-search').value;
+                const t = item.querySelector('.goodskill-t').value;
+                const v = item.querySelector('.goodskill-v').value;
+                const r = item.querySelector('.goodskill-r').value;
+                
+                const parsedId = parseInt(skillId);
+                if (!isNaN(parsedId) && t && v) {
+                    config.goodSkills[parsedId] = {
+                        "t": parseInt(t) || 0,
+                        "v": parseInt(v) || 0,
+                        "r": parseInt(r) || 0
+                    };
+                }
+            });
+            if (Object.keys(config.goodSkills).length === 0) {
+                delete config.goodSkills;
+            }
+        }
+        
+        // 4. id, star, nick, desp, icon
+        if (id) config.id = parseInt(id) || 0;
+        const star = document.getElementById('star').value;
         if (star) config.star = parseInt(star) || 0;
+        const nick = document.getElementById('nick').value;
         if (nick) config.nick = nick;
+        const desp = document.getElementById('desp').value;
         if (desp) config.desp = desp;
+        const icon = document.getElementById('icon').value;
         if (icon) config.icon = parseInt(icon) || 0;
 
+        // 5. preSkill
+        const preSkillStr = document.getElementById('preSkill').value;
         if (preSkillStr) {
             config.preSkill = preSkillStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
         } else {
             config.preSkill = [];
         }
 
+        // 6. mate
         config.mate = {};
-        config.mate[id] = 1;
+        if (id) config.mate[id] = 1;
 
+        // 7. levelMate
         const levelMateItems = levelMateContainer.querySelectorAll('.levelmate-item');
         if (levelMateItems.length > 0) {
             config.levelMate = {};
-            let hasLevelMate = false;
             levelMateItems.forEach(item => {
                 const level = item.querySelector('.levelmate-level').value;
-                const matId = item.querySelector('.levelmate-id').value;
+                const matId = item.querySelector('.levelmate-id-search').value;
                 const count = item.querySelector('.levelmate-count').value;
+                
+                const parsedLevel = parseInt(level);
+                const parsedId = parseInt(matId);
+                const parsedCount = parseInt(count);
 
-                if (level && matId && count) {
-                    config.levelMate[level] = {};
-                    config.levelMate[level][matId] = parseInt(count);
-                    hasLevelMate = true;
+                if (!isNaN(parsedLevel) && !isNaN(parsedId) && !isNaN(parsedCount)) {
+                    if (!config.levelMate[parsedLevel]) {
+                        config.levelMate[parsedLevel] = {};
+                    }
+                    config.levelMate[parsedLevel][parsedId] = parsedCount;
                 }
             });
-            if (!hasLevelMate) {
+            if (Object.keys(config.levelMate).length === 0) {
                 delete config.levelMate;
             }
         }
 
-        return data;
+        return config;
     }
 
+    function updateTotalGains() {
+        const effItems = effContainer.querySelectorAll('.eff-item');
+        const gains = {};
+
+        effItems.forEach(item => {
+            const t = item.querySelector('.eff-t').value;
+            const v = item.querySelector('.eff-v').value;
+            
+            if (t && v) {
+                const typeName = typeReverseMap[t] || `未知类型(${t})`;
+                const value = parseInt(v) || 0;
+                if (gains[typeName]) {
+                    gains[typeName] += value;
+                } else {
+                    gains[typeName] = value;
+                }
+            }
+        });
+
+        const gainsList = totalGainsListDesktop;
+        const gainsListMobile = totalGainsListMobile;
+        gainsList.innerHTML = '';
+        gainsListMobile.innerHTML = '';
+
+        for (const type in gains) {
+            if (gains.hasOwnProperty(type)) {
+                const value = gains[type];
+                if (value !== 0) {
+                    const li = document.createElement('li');
+                    li.textContent = `${type}总计: ${value}`;
+                    // Special cases for units, add '%' if needed.
+                    if (type.includes('血量') || type.includes('闪避') || type.includes('格挡') || type.includes('威力') || type.includes('攻击') || type.includes('免伤') || type.includes('吸血') || type.includes('回血') || type.includes('爆伤') || type.includes('反伤') || type.includes('暴击')) {
+                        li.textContent += '%';
+                    }
+                    gainsList.appendChild(li);
+                    
+                    const liMobile = document.createElement('li');
+                    liMobile.textContent = li.textContent;
+                    gainsListMobile.appendChild(liMobile);
+                }
+            }
+        }
+    }
+    
     function updateJSON() {
         const data = collectFormData();
-        if (data) {
-            const jsonString = JSON.stringify(data, null, 2);
-            const finalOutput = `"${document.getElementById('id').value}": ${jsonString},`;
-            outputDesktopElem.textContent = finalOutput;
-            outputMobileElem.textContent = finalOutput;
-        } else {
-            const placeholder = '请至少输入内功ID';
-            outputDesktopElem.textContent = placeholder;
-            outputMobileElem.textContent = placeholder;
+        const id = document.getElementById('id').value;
+        
+        // Manually build the final object to ensure correct order
+        const orderedOutput = {};
+        
+        if (data.eff) orderedOutput.eff = data.eff;
+        if (data.xiuWei !== undefined) orderedOutput.xiuWei = data.xiuWei;
+        if (data.goodSkills) orderedOutput.goodSkills = data.goodSkills;
+        if (data.id !== undefined) orderedOutput.id = data.id;
+        if (data.star !== undefined) orderedOutput.star = data.star;
+        if (data.nick) orderedOutput.nick = data.nick;
+        if (data.desp) orderedOutput.desp = data.desp;
+        if (data.icon !== undefined) orderedOutput.icon = data.icon;
+        if (data.preSkill !== undefined) orderedOutput.preSkill = data.preSkill;
+        if (data.mate) orderedOutput.mate = data.mate;
+        if (data.levelMate) orderedOutput.levelMate = data.levelMate;
+        
+        const jsonString = JSON.stringify(orderedOutput, null, 2);
+        
+        // 核心修改：移除ID判断，直接根据ID是否存在来构建键
+        const key = id ? `"${id}"` : `""`;
+        const finalOutput = `${key}: ${jsonString},`;
+        
+        outputDesktopElem.textContent = finalOutput;
+        outputMobileElem.textContent = finalOutput;
+        updateTotalGains();
+    }
+
+    async function loadData() {
+        try {
+            const propResponse = await fetch('prop/drop.json');
+            propData = await propResponse.json();
+            console.log('propData loaded:', propData);
+
+            const skillResponse = await fetch('skill/skill.json');
+            skillData = await skillResponse.json();
+            console.log('skillData loaded:', skillData);
+        } catch (error) {
+            console.error('Failed to load local data files:', error);
+            alert('未能加载本地数据文件 (prop/drop.json 或 skill/skill.json)。请确保它们存在于正确路径，且本地服务器已运行。');
         }
     }
 
-    document.querySelectorAll('input, select, textarea').forEach(elem => {
-        elem.addEventListener('input', updateJSON);
-    });
-
-    document.addEventListener('input', (e) => {
-        if (e.target.closest('.levelmate-item')) {
-            updateJSON();
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        for (let i = 0; i < 9; i++) {
+            effContainer.appendChild(createEffItem(i));
         }
+        addSearchListeners();
+        addInputListeners();
+        updateJSON();
     });
 
     async function copyJson() {
@@ -496,11 +913,6 @@
         }
     }
 
-    // Initial setup: create the 9 eff items
-    for (let i = 0; i < 9; i++) {
-        effContainer.appendChild(createEffItem(i));
-    }
-    updateJSON();
 </script>
 
 </body>
