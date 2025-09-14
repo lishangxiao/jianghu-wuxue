@@ -132,7 +132,7 @@
             background-color: #f0f0f0;
         }
 
-        .add-levelmate-btn, .remove-levelmate-btn, .add-goodskill-btn, .remove-goodskill-btn {
+        .add-levelmate-btn, .remove-levelmate-btn, .add-goodskill-btn, .remove-goodskill-btn, .add-template-btn, .remove-template-btn {
             padding: 5px 10px;
             border: none;
             border-radius: 4px;
@@ -142,21 +142,21 @@
             margin-right: 5px;
         }
 
-        .add-levelmate-btn, .add-goodskill-btn {
+        .add-levelmate-btn, .add-goodskill-btn, .add-template-btn {
             background-color: var(--accent-color);
             color: white;
         }
 
-        .add-levelmate-btn:hover, .add-goodskill-btn:hover {
+        .add-levelmate-btn:hover, .add-goodskill-btn:hover, .add-template-btn:hover {
             background-color: var(--hover-color);
         }
 
-        .remove-levelmate-btn, .remove-goodskill-btn {
+        .remove-levelmate-btn, .remove-goodskill-btn, .remove-template-btn {
             background-color: #e74c3c;
             color: white;
         }
 
-        .remove-levelmate-btn:hover, .remove-goodskill-btn:hover {
+        .remove-levelmate-btn:hover, .remove-goodskill-btn:hover, .remove-template-btn:hover {
             background-color: #c0392b;
         }
 
@@ -194,6 +194,74 @@
             margin-top: 20px;
             margin-bottom: 10px;
             font-size: 1.1em;
+        }
+        
+        .template-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .template-item .form-group {
+            margin-bottom: 10px;
+        }
+
+        .template-radios {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .template-radios label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+        }
+        
+        /* Styling for checkboxes */
+        .template-radios input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #fff;
+            margin: 0;
+            font: inherit;
+            color: var(--accent-color);
+            width: 1.15em;
+            height: 1.15em;
+            border: 0.15em solid currentColor;
+            border-radius: 0.15em;
+            transform: translateY(-0.075em);
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+        }
+        
+        .template-radios input[type="checkbox"]::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+            transform: scale(0);
+            transform-origin: bottom left;
+            transition: transform 120ms ease-in-out;
+            box-shadow: inset 1em 1em var(--accent-color);
+        }
+        
+        .template-radios input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+        
+        .template-radios input[type="checkbox"]:disabled {
+            background-color: #e0e0e0;
+            cursor: not-allowed;
+            border-color: #a0a0a0;
+        }
+        
+        .template-radios input[type="checkbox"]:disabled::before {
+            box-shadow: inset 1em 1em #a0a0a0;
         }
 
         .eff-item, .levelmate-item, .goodskill-item {
@@ -333,6 +401,10 @@
             <input type="text" id="preSkill" placeholder="例如: 1234,5678" autocomplete="off">
         </div>
 
+        <div class="section-header">效果模板</div>
+        <div id="template-container"></div>
+        <button class="add-template-btn" onclick="addTemplate()">添加效果模板</button>
+
         <div class="section-header">升级效果 (eff) - 共9重</div>
         <div id="eff-container">
         </div>
@@ -382,17 +454,6 @@
 
     const typeReverseMap = Object.fromEntries(Object.entries(typeMap).map(([key, value]) => [value, key]));
 
-    const despMap = {
-        '1': '绝对血量增加%d', '2': '血量增加%d%', '4': '速度增加%d', '16': '闪避增加%d%', '64': '格挡增加%d%',
-        '512': '拳脚威力增加%d%', '2048': '刀法威力增加%d%', '8192': '剑法威力增加%d%',
-        '65536': '绝对攻击增加%d', '131072': '攻击增加%d%', '524288': '免伤增加%d%', '2097152': '吸血增加%d%',
-        '8388608': '回血增加%d%', '16777216': '爆伤增加%d%', '33554432': '反伤增加%d%', '134217728': '暴击增加%d%',
-        '134217734': '武器万分比增加%d', '134217735': '基础伤害万分比增加%d',
-        '134217736': '武功万分比增加%d',
-        '134217729': '免疫眩晕状态，概率%d%', '134217730': '免疫流血状态，概率%d%', '134217732': '免疫减速状态，概率%d%',
-        '134217733': '战斗力竭之后%r回合复活，回复%d%的血量',
-    };
-
     const typeOptions = Object.keys(typeMap).map(key => `<option value="${typeMap[key]}">${key} (${typeMap[key]})</option>`).join('');
 
     const effContainer = document.getElementById('eff-container');
@@ -406,47 +467,21 @@
     const totalGainsListDesktop = document.getElementById('total-gains-list');
     const totalGainsListMobile = document.getElementById('total-gains-list-mobile');
 
+    const templateContainer = document.getElementById('template-container');
+    let templateCounter = 0;
+    const associatedLevels = new Set(); // 追踪已被模板占用的重数
+
     let propData = {};
     let skillData = {};
-
-    function generateDesp(t, v, r) {
-        let autoDesp = despMap[t] || '';
-        
-        // Handle empty value for initial state
-        if (!v) {
-            return ``; // 修改：不输入值时不自动生成描述
-        }
-        
-        if (t == 134217733) {
-            autoDesp = autoDesp.replace('%d', v).replace('%r', r);
-        } else if (v < 0) {
-            autoDesp = autoDesp.replace('增加', '减少');
-            autoDesp = autoDesp.replace('%d', Math.abs(v));
-        } else {
-            autoDesp = autoDesp.replace('%d', v);
-        }
-
-        return autoDesp;
-    }
 
     function createEffItem(index) {
         const item = document.createElement('div');
         item.className = 'eff-item';
         
-        let initialT = 1; 
         let initialV = '';
-        let initialR = 0;
 
         item.innerHTML = `
             <h4>第 ${index + 1} 重</h4>
-            <div class="form-group">
-                <label>效果名称 (nick)</label>
-                <input type="text" class="eff-nick" placeholder="后续t值相同但名称为空将被自动填充一样的nick" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>效果描述 (desp)</label>
-                <input type="text" class="eff-desp" placeholder="当tvr三个值都完整且描述为空时将自动生成描述" autocomplete="off">
-            </div>
             <div class="form-group">
                 <label>属性类型 (t)</label>
                 <select class="eff-t" autocomplete="off">
@@ -485,6 +520,103 @@
             </div>
         `;
         return item;
+    }
+
+    function createTemplateItem() {
+        const item = document.createElement('div');
+        item.className = 'template-item';
+        const templateId = ++templateCounter;
+
+        let radiosHtml = '';
+        for (let i = 1; i <= 9; i++) {
+            const isDisabled = associatedLevels.has(i);
+            radiosHtml += `
+                <label>
+                    <input type="checkbox" name="template-level-${templateId}" value="${i}" ${isDisabled ? 'disabled' : ''}>
+                    ${i}重
+                </label>
+            `;
+        }
+        
+        item.innerHTML = `
+            <div class="form-group">
+                <label>模板名称</label>
+                <input type="text" class="template-nick" placeholder="模板效果名称" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>模板描述</label>
+                <input type="text" class="template-desp" placeholder="模板效果描述" autocomplete="off">
+            </div>
+            <div class="template-radios">
+                ${radiosHtml}
+            </div>
+            <button class="remove-template-btn" onclick="removeTemplate(this)">删除</button>
+        `;
+        return item;
+    }
+
+    function addTemplate() {
+        const newItem = createTemplateItem();
+        templateContainer.appendChild(newItem);
+        addTemplateListeners(newItem);
+        updateJSON();
+    }
+
+    function removeTemplate(btn) {
+        const item = btn.parentElement;
+        const checkboxes = item.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                associatedLevels.delete(parseInt(checkbox.value));
+            }
+        });
+        item.remove();
+        updateAllCheckboxesState();
+        updateJSON();
+    }
+    
+    function addTemplateListeners(container = document) {
+        container.querySelectorAll('.template-radios input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const level = parseInt(checkbox.value);
+                if (checkbox.checked) {
+                    associatedLevels.add(level);
+                } else {
+                    associatedLevels.delete(level);
+                }
+                updateAllCheckboxesState();
+                updateJSON();
+            });
+        });
+        container.querySelectorAll('.template-nick, .template-desp').forEach(input => {
+            input.addEventListener('input', updateJSON);
+        });
+    }
+
+    function updateAllCheckboxesState() {
+        document.querySelectorAll('.template-radios input[type="checkbox"]').forEach(checkbox => {
+            const level = parseInt(checkbox.value);
+            // If the checkbox is not checked and its level is taken, disable it.
+            if (!checkbox.checked && associatedLevels.has(level)) {
+                checkbox.disabled = true;
+            } else {
+                checkbox.disabled = false;
+            }
+        });
+    }
+
+    function getTemplateForLevel(level) {
+        let selectedTemplate = null;
+        document.querySelectorAll('.template-item').forEach(item => {
+            const checkbox = item.querySelector(`input[type="checkbox"][value="${level}"]:checked`);
+            if (checkbox) {
+                selectedTemplate = {
+                    nick: item.querySelector('.template-nick').value,
+                    desp: item.querySelector('.template-desp').value
+                };
+            }
+        });
+        return selectedTemplate;
     }
 
     function createLevelMateItem() {
@@ -584,74 +716,11 @@
     }
 
     function addInputListeners(container = document) {
-        // Listen for input on most elements for real-time JSON update
         container.querySelectorAll('input, select, textarea').forEach(elem => {
-            elem.addEventListener('input', (event) => {
-                // The 'eff-nick' and 'eff-desp' inputs are handled below,
-                // so we skip them here to avoid redundant calls.
-                if (!event.target.classList.contains('eff-nick') && !event.target.classList.contains('eff-desp')) {
-                    updateJSON();
-                }
-            });
+            elem.addEventListener('input', updateJSON);
             elem.addEventListener('change', updateJSON);
         });
-        
-        // eff-t, eff-v, eff-r changes should trigger desp autofill
-        container.querySelectorAll('.eff-t, .eff-v, .eff-r').forEach(elem => {
-            elem.addEventListener('input', (event) => {
-                autofillDesp(event.target.closest('.eff-item'));
-                updateJSON();
-            });
-        });
-
-        // The eff-nick input now only listens for the 'change' event to trigger autofill
-        container.querySelectorAll('.eff-nick').forEach(input => {
-            input.addEventListener('change', autofillNicks);
-        });
-        
-        // Listen for user input on eff-desp to prevent autofill on manual change
-        // This is the core change for requirement #2
-        container.querySelectorAll('.eff-desp').forEach(input => {
-            input.addEventListener('input', () => {
-                input.dataset.manuallyEdited = 'true';
-            });
-        });
     }
-
-    function autofillDesp(item) {
-        const effT = item.querySelector('.eff-t').value;
-        const effV = item.querySelector('.eff-v').value;
-        const effR = item.querySelector('.eff-r').value;
-        const effDespInput = item.querySelector('.eff-desp');
-        
-        // 核心修改：仅在用户未手动输入过描述时才自动填充
-        if (!effDespInput.dataset.manuallyEdited) {
-            const autoDesp = generateDesp(effT, effV, effR);
-            effDespInput.value = autoDesp;
-        }
-    }
-
-    function autofillNicks(event) {
-        const currentInput = event.target;
-        const currentItem = currentInput.closest('.eff-item');
-        const currentType = currentItem.querySelector('.eff-t').value;
-        const currentNickValue = currentInput.value.trim();
-
-        if (currentNickValue) {
-            const effItems = effContainer.querySelectorAll('.eff-item');
-            effItems.forEach(item => {
-                const nickInput = item.querySelector('.eff-nick');
-                const typeSelect = item.querySelector('.eff-t');
-                
-                // Only fill if the type matches and the input is empty
-                if (typeSelect.value === currentType && nickInput.value.trim() === '') {
-                    nickInput.value = currentNickValue;
-                }
-            });
-        }
-        updateJSON();
-    }
-
 
     function handleSearch(event, data) {
         const query = event.target.value.toLowerCase();
@@ -697,17 +766,25 @@
         // 1. eff
         config.eff = [];
         const effItems = effContainer.querySelectorAll('.eff-item');
-        effItems.forEach(item => {
+        effItems.forEach((item, index) => {
             const eff = {};
-            const effNickInput = item.querySelector('.eff-nick');
-            const effDespInput = item.querySelector('.eff-desp');
+            const level = index + 1;
+            const template = getTemplateForLevel(level);
+
+            // Use template values if available
+            if (template) {
+                eff.nick = template.nick;
+                eff.desp = template.desp;
+            } else {
+                // Otherwise, use default values (empty)
+                eff.nick = '';
+                eff.desp = '';
+            }
+            
             const effT = item.querySelector('.eff-t').value;
             const effV = item.querySelector('.eff-v').value;
             const effR = item.querySelector('.eff-r').value;
 
-            eff.nick = effNickInput.value;
-            eff.desp = effDespInput.value;
-            
             if (effT) eff.t = parseInt(effT) || 0;
             if (effV) eff.v = parseInt(effV) || 0;
             if (effR) eff.r = parseInt(effR) || 0;
@@ -798,7 +875,8 @@
         const effItems = effContainer.querySelectorAll('.eff-item');
         const gains = {};
 
-        effItems.forEach(item => {
+        effItems.forEach((item, index) => {
+            const level = index + 1;
             const t = item.querySelector('.eff-t').value;
             const v = item.querySelector('.eff-v').value;
             
@@ -859,7 +937,6 @@
         
         const jsonString = JSON.stringify(orderedOutput, null, 2);
         
-        // 核心修改：移除ID判断，直接根据ID是否存在来构建键
         const key = id ? `"${id}"` : `""`;
         const finalOutput = `${key}: ${jsonString},`;
         
@@ -899,7 +976,7 @@
         const copyBtn = isMobile ? copyBtnMobile : copyBtnDesktop;
         const textToCopy = outputElement.textContent;
 
-        if (textToCopy && textToCopy !== '请至少输入内功ID') {
+        if (textToCopy) {
             try {
                 await navigator.clipboard.writeText(textToCopy);
                 copyBtn.textContent = '已复制！';
@@ -912,7 +989,6 @@
             }
         }
     }
-
 </script>
 
 </body>
