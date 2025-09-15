@@ -449,7 +449,7 @@
         '回血': 8388608, '爆伤': 16777216, '反伤': 33554432, '暴击': 134217728,
         '武器万分比': 134217734, '基础伤害万分比': 134217735,
         '武功万分比': 134217736,
-        '免晕': 134217729, '免流': 134217730, '免速': 134217732, '复活': 134217733
+        '免晕': 134217729, '免流': 134217730, '免速': 134217732, '复活': 134217733, 'goodskill占位符': 67108864
     };
 
     const typeReverseMap = Object.fromEntries(Object.entries(typeMap).map(([key, value]) => [value, key]));
@@ -492,7 +492,7 @@
                     <option value="64">格挡 (64)</option>
                     <option value="512">拳脚威力 (512)</option>
                     <option value="2048">刀法威力 (2048)</option>
-                    <option value="8192">剑法真意 (8192)</option>
+                    <option value="8192">剑法威力 (8192)</option>
                     <option value="65536">绝对攻击 (65536)</option>
                     <option value="131072">攻击 (131072)</option>
                     <option value="524288">免伤 (524288)</option>
@@ -508,6 +508,7 @@
                     <option value="134217730">免流 (134217730)</option>
                     <option value="134217732">免速 (134217732)</option>
                     <option value="134217733">复活 (134217733)</option>
+                    <option value="67108864">goodskill占位符(67108864)</option>
                 </select>
             </div>
             <div class="form-group">
