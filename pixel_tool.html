@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PNG 像素坐标拾取工具</title>
+    <style>
+        /* 基础样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 容器样式 */
+        .container {
+            width: 95%;
+            max-width: 800px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* 文件上传按钮 */
+        #file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+        }
+        #file-input-label:hover {
+            background-color: #0056b3;
+        }
+        #file-input {
+            display: none;
+        }
+
+        /* 画布容器 */
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 占位符，将在JS中动态调整 */
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: #e9ecef;
+            touch-action: none;
+        }
+
+        /* 两个画布，绝对定位到容器内 */
+        #image-canvas, #highlight-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 坐标显示 */
+        #coordinates {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-family: monospace;
+            font-weight: bold;
+            color: #333;
+            min-height: 25px;
+        }
+        #zoom-level {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>PNG 像素坐标拾取工具</h1>
+        <label id="file-input-label" for="file-input">上传 PNG 图片</label>
+        <input type="file" id="file-input" accept="image/png">
+        
+        <div id="canvas-container">
+            <canvas id="image-canvas"></canvas>
+            <canvas id="highlight-canvas"></canvas>
+        </div>
+        
+        <div id="coordinates"></div>
+        <div id="zoom-level"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const canvasContainer = document.getElementById('canvas-container');
+        const imageCanvas = document.getElementById('image-canvas');
+        const highlightCanvas = document.getElementById('highlight-canvas');
+        const imageCtx = imageCanvas.getContext('2d');
+        const highlightCtx = highlightCanvas.getContext('2d');
+        const coordinatesDisplay = document.getElementById('coordinates');
+        const zoomLevelDisplay = document.getElementById('zoom-level');
+
+        let image = null;
+        let scale = 1;
+        let minScale = 1; 
+        let pan = { x: 0, y: 0 };
+        let lastHighlightedPixel = null;
+        let lastPan = { x: 0, y: 0 };
+        let isPanning = false;
+        let lastTouchDistance = null;
+        let initialImageScale = 1;
+
+        // 设置最大放大倍数
+        const MAX_ZOOM = 100;
+
+        /**
+         * 绘制图片和高亮到各自的画布上
+         */
+        function drawAll() {
+            if (!image) return;
+
+            // 1. 绘制主图片
+            imageCtx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+            imageCtx.save();
+            imageCtx.translate(pan.x, pan.y);
+            imageCtx.scale(scale * initialImageScale, scale * initialImageScale);
+            imageCtx.drawImage(image, 0, 0);
+            imageCtx.restore();
+
+            // 2. 绘制高亮
+            highlightCtx.clearRect(0, 0, highlightCanvas.width, highlightCanvas.height);
+            if (lastHighlightedPixel) {
+                highlightCtx.save();
+                highlightCtx.translate(pan.x, pan.y);
+                highlightCtx.scale(scale * initialImageScale, scale * initialImageScale);
+                
+                // 绘制高亮像素点
+                highlightCtx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                highlightCtx.fillRect(lastHighlightedPixel.x, lastHighlightedPixel.y, 1, 1);
+
+                // 绘制十字线
+                highlightCtx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                highlightCtx.lineWidth = 1 / (scale * initialImageScale);
+                
+                highlightCtx.beginPath();
+                highlightCtx.moveTo(0, lastHighlightedPixel.y + 0.5);
+                highlightCtx.lineTo(image.width, lastHighlightedPixel.y + 0.5);
+                highlightCtx.stroke();
+
+                highlightCtx.beginPath();
+                highlightCtx.moveTo(lastHighlightedPixel.x + 0.5, 0);
+                highlightCtx.lineTo(lastHighlightedPixel.x + 0.5, image.height);
+                highlightCtx.stroke();
+
+                highlightCtx.restore();
+            }
+            // 更新缩放倍数显示
+            zoomLevelDisplay.textContent = `缩放: ${Math.round(scale * 100)}%`;
+        }
+
+        /**
+         * 将屏幕坐标转换为图片像素坐标
+         * @param {number} clientX 屏幕X坐标
+         * @param {number} clientY 屏幕Y坐标
+         * @returns {Object|null} 包含x, y的像素坐标对象
+         */
+        function getPixelCoordinates(clientX, clientY) {
+            if (!image) return null;
+            const rect = imageCanvas.getBoundingClientRect();
+            const canvasX = clientX - rect.left;
+            const canvasY = clientY - rect.top;
+            
+            const scaleRatioX = imageCanvas.width / rect.width;
+            const scaleRatioY = imageCanvas.height / rect.height;
+
+            const internalX = canvasX * scaleRatioX;
+            const internalY = canvasY * scaleRatioY;
+            
+            const pixelX = Math.floor((internalX - pan.x) / (scale * initialImageScale));
+            const pixelY = Math.floor((internalY - pan.y) / (scale * initialImageScale));
+            
+            if (pixelX >= 0 && pixelX < image.width && pixelY >= 0 && pixelY < image.height) {
+                return { x: pixelX, y: pixelY };
+            }
+            return null;
+        }
+
+        /**
+         * 调整画布尺寸以匹配容器
+         */
+        function resizeCanvas() {
+            const containerRect = canvasContainer.getBoundingClientRect();
+            imageCanvas.width = containerRect.width;
+            imageCanvas.height = containerRect.height;
+            highlightCanvas.width = containerRect.width;
+            highlightCanvas.height = containerRect.height;
+        }
+
+        // --- 事件监听 ---
+
+        // 1. 文件上传
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file || !file.type.startsWith('image/png')) {
+                alert('请上传 PNG 格式的图片！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                image = new Image();
+                image.onload = () => {
+                    const aspectRatio = (image.height / image.width) * 100;
+                    canvasContainer.style.paddingTop = `${aspectRatio}%`;
+
+                    resizeCanvas();
+
+                    initialImageScale = Math.min(imageCanvas.width / image.width, imageCanvas.height / image.height);
+                    
+                    scale = 1;
+                    minScale = 1;
+                    pan = { x: 0, y: 0 };
+                    lastHighlightedPixel = null;
+                    coordinatesDisplay.textContent = '点击图片来拾取坐标';
+                    drawAll();
+                };
+                image.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 2. 鼠标事件（平移和缩放）
+        canvasContainer.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+                isPanning = true;
+                lastPan.x = e.clientX;
+                lastPan.y = e.clientY;
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            const dx = e.clientX - lastPan.x;
+            const dy = e.clientY - lastPan.y;
+            pan.x += dx;
+            pan.y += dy;
+            lastPan.x = e.clientX;
+            lastPan.y = e.clientY;
+            drawAll();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isPanning = false;
+        });
+
+        canvasContainer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.01;
+            const rect = imageCanvas.getBoundingClientRect();
+            
+            const mouseCanvasX = (e.clientX - rect.left) * (imageCanvas.width / rect.width);
+            const mouseCanvasY = (e.clientY - rect.top) * (imageCanvas.height / rect.height);
+            const imageCoordX = (mouseCanvasX - pan.x);
+            const imageCoordY = (mouseCanvasY - pan.y);
+            
+            const oldScale = scale;
+            scale += e.deltaY * -zoomSpeed;
+            scale = Math.max(minScale, Math.min(scale, MAX_ZOOM));
+            
+            pan.x -= imageCoordX * (scale - oldScale) / oldScale;
+            pan.y -= imageCoordY * (scale - oldScale) / oldScale;
+            
+            drawAll();
+        });
+
+        // 3. 触摸事件（平移和缩放）
+        canvasContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                isPanning = true;
+                lastPan.x = e.touches[0].clientX;
+                lastPan.y = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                lastTouchDistance = Math.hypot(
+                    e.touches[1].clientX - e.touches[0].clientX,
+                    e.touches[1].clientY - e.touches[0].clientY
+                );
+            }
+        });
+
+        canvasContainer.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && isPanning) {
+                const dx = e.touches[0].clientX - lastPan.x;
+                const dy = e.touches[0].clientY - lastPan.y;
+                pan.x += dx;
+                pan.y += dy;
+                lastPan.x = e.touches[0].clientX;
+                lastPan.y = e.touches[0].clientY;
+                drawAll();
+            } else if (e.touches.length === 2 && lastTouchDistance) {
+                const currentDistance = Math.hypot(
+                    e.touches[1].clientX - e.touches[0].clientX,
+                    e.touches[1].clientY - e.touches[0].clientY
+                );
+                const zoomFactor = currentDistance / lastTouchDistance;
+                const oldScale = scale;
+                scale *= zoomFactor;
+                scale = Math.max(minScale, Math.min(scale, MAX_ZOOM));
+                
+                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                const rect = imageCanvas.getBoundingClientRect();
+                const mouseCanvasX = (centerX - rect.left) * (imageCanvas.width / rect.width);
+                const mouseCanvasY = (centerY - rect.top) * (imageCanvas.height / rect.height);
+
+                const imageCoordX = (mouseCanvasX - pan.x);
+                const imageCoordY = (mouseCanvasY - pan.y);
+
+                pan.x -= imageCoordX * (scale - oldScale) / oldScale;
+                pan.y -= imageCoordY * (scale - oldScale) / oldScale;
+                
+                lastTouchDistance = currentDistance;
+                drawAll();
+            }
+        });
+
+        canvasContainer.addEventListener('touchend', () => {
+            isPanning = false;
+            lastTouchDistance = null;
+        });
+
+        // 4. 拾取像素坐标 (鼠标点击和触摸点击)
+        canvasContainer.addEventListener('click', (e) => {
+            const coords = getPixelCoordinates(e.clientX, e.clientY);
+            handlePixelClick(coords);
+        });
+
+        canvasContainer.addEventListener('touchend', (e) => {
+            if (e.touches.length > 0) return;
+            const touch = e.changedTouches[0];
+            const coords = getPixelCoordinates(touch.clientX, touch.clientY);
+            handlePixelClick(coords);
+        });
+
+        /**
+         * 处理像素点击的通用逻辑
+         * @param {Object|null} coords 像素坐标，如果点击范围外则为 null
+         */
+        function handlePixelClick(coords) {
+            if (coords) {
+                lastHighlightedPixel = coords;
+                coordinatesDisplay.textContent = `坐标: (${coords.x}, ${coords.y})`;
+            } else {
+                lastHighlightedPixel = null;
+                coordinatesDisplay.textContent = '请在图片范围内点击';
+            }
+            drawAll();
+        }
+
+        // 5. 初始提示
+        coordinatesDisplay.textContent = '请上传 PNG 图片';
+
+        // 确保容器大小变化时重新计算和重绘
+        window.addEventListener('resize', () => {
+            if (image) {
+                resizeCanvas();
+                initialImageScale = Math.min(imageCanvas.width / image.width, imageCanvas.height / image.height);
+                scale = Math.max(scale, minScale);
+                drawAll();
+            }
+        });
+    </script>
+
+</body>
+</html>
